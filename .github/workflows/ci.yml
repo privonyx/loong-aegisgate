@@ -143,7 +143,10 @@ jobs:
 
   build-and-test-pg:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    # Cold configure installs vcpkg control-plane (grpc/protobuf) and can take
+    # ~25m alone; 30m job budget then cancels mid-build. Align with
+    # ci-control-plane / leave headroom for build + ctest after warm cache.
+    timeout-minutes: 60
     name: release-pg
 
     services:
