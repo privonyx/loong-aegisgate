@@ -1,0 +1,26 @@
+{
+  "title": "成本分析",
+  "toast": {
+    "loadFailed": "加载失败"
+  },
+  "filter": {
+    "tenant": "按租户 ID 过滤",
+    "model": "按模型过滤"
+  },
+  "columns": {
+    "timestamp": "时间",
+    "requestId": "请求ID",
+    "tenant": "租户",
+    "model": "模型",
+    "cost": "成本",
+    "inputTokens": "输入 Tokens",
+    "outputTokens": "输出 Tokens"
+  },
+  "chart": {
+    "modelCostDistribution": "模型成本分布",
+    "tokenUsageTrend": "Token 使用趋势",
+    "input": "输入",
+    "output": "输出"
+  },
+  "exportDialogTitle": "导出成本报表"
+}

@@ -1,0 +1,66 @@
+apiVersion: aegisgate.dev/v1alpha1
+kind: ProviderManifest
+metadata:
+  name: doubao
+  display_name: ByteDance Doubao
+  vendor: ByteDance (Volcano Engine)
+  homepage: https://www.volcengine.com/product/doubao
+  documentation: https://www.volcengine.com/docs/82379
+  tags: [commercial, chat, chinese]
+  maturity: preview
+spec:
+  connector:
+    kind: openai
+  endpoint:
+    base_url_default: https://ark.cn-beijing.volces.com/api/v3
+    base_url_env: DOUBAO_BASE_URL
+    timeout_ms_default: 30000
+    max_retries_default: 2
+  auth:
+    type: bearer
+    header_name: Authorization
+    env_var: DOUBAO_API_KEY
+    supports_multi_key: true
+  compatibility:
+    openai_chat_completions: partial
+    fields:
+      - name: messages
+        status: supported
+      - name: stream
+        status: supported
+      - name: tools
+        status: unsupported
+        notes: Tool calling support varies by endpoint id; declare as unsupported to be safe.
+      - name: response_format
+        status: unsupported
+      - name: logprobs
+        status: unsupported
+  capabilities:
+    - streaming
+    - system_message
+    - temperature
+    - top_p
+    - max_tokens
+  models:
+    - id: doubao-pro-32k
+      max_context_tokens: 32768
+      capabilities: [streaming]
+      region_hints: [ap-east]
+    - id: doubao-lite-32k
+      max_context_tokens: 32768
+      capabilities: [streaming]
+      region_hints: [ap-east]
+  conformance:
+    required_checks:
+      - manifest-shape
+      - auth-defined
+      - compatibility-declared
+      - capability-enum
+      - models-unique
+      - sample-request-shape
+    sample_request:
+      model: doubao-pro-32k
+      messages:
+        - role: user
+          content: ping
+      max_tokens: 16

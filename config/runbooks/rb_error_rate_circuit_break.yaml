@@ -1,0 +1,27 @@
+# Phase 11.4 self-healing ops — Runbook 2/5.
+#
+# 场景：错误率激增（多源同时命中），写 audit + 通知运维通过外部
+# 熔断脚本切流。advisory 模式（v1 不直接修改 Router fallback chain）。
+
+id: "rb_error_rate_circuit_break"
+description: "错误率激增 → 紧急熔断切流提案（advisory）"
+triggers:
+  - kind: "rca_required"
+    rca_rule_id: "rca_error_rate_burst"
+    rca_min_score: 0.7
+  - kind: "metric"
+    signal: "error_rate"
+    op: ">"
+    value: 0.10
+actions:
+  - action: "switch_router_fallback"
+    payload:
+      model_id: "${primary_model}"
+      reason: "error_rate breach"
+      off_until_ms: 300000
+rollback_actions:
+  - action: "audit_only"
+    payload:
+      note: "circuit breaker reset by operator"
+approval_required: false
+cooldown_seconds: 300

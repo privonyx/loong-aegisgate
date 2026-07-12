@@ -1,0 +1,125 @@
+# Phase 11.4 self-healing ops (TASK-20260519-01) — RCA rules v1.
+#
+# 5 rules covering the 5 example runbooks in config/runbooks/. Each rule
+# combines 2-3 condition kinds drawn from {metric_threshold,
+# feedback_event_count, log_pattern_count} so RootCauseAnalyzer can fuse
+# multi-source signals (creative C2.4 = OR + min_matched_conditions).
+#
+# Loading is gated by SR-NEW1: the path must reside under config/rca_rules/,
+# the file must end .yaml, and a sha256 of the body is logged at startup.
+
+rules:
+  - id: "rca_high_p99_internal"
+    category: "internal"
+    summary: "网关内部高延迟（无明确上游或日志线索）"
+    min_matched_conditions: 1
+    score_when_all_matched: 0.85
+    score_per_condition: 0.55
+    conditions:
+      - kind: "metric_threshold"
+        signal: "p99_latency_ms"
+        op: ">"
+        value: 2000
+        evidence_label: "p99 延迟 ${current}ms 超过阈值 ${expected}ms"
+      - kind: "feedback_event_count"
+        event_type: "OpsIncident"
+        topic_match: ""
+        window_seconds: 300
+        count_threshold: 3
+        evidence_label: "OpsIncident 事件 ${count} 次（窗口 ${window}s）"
+    suggested_actions:
+      - "rb_high_latency_quality_downgrade"
+
+  - id: "rca_error_rate_burst"
+    category: "internal"
+    summary: "错误率激增 — 多源同时命中"
+    min_matched_conditions: 2
+    score_when_all_matched: 0.92
+    score_per_condition: 0.4
+    conditions:
+      - kind: "metric_threshold"
+        signal: "error_rate"
+        op: ">"
+        value: 0.05
+        evidence_label: "error_rate ${current} > ${expected}"
+      - kind: "feedback_event_count"
+        event_type: "OpsIncident"
+        topic_match: ""
+        window_seconds: 300
+        count_threshold: 5
+        evidence_label: "OpsIncident ${count}/window=${window}s"
+      - kind: "log_pattern_count"
+        pattern: "5\\d\\d (Bad Gateway|Service Unavailable|Internal)"
+        window_seconds: 300
+        count_threshold: 10
+        evidence_label: "5xx 日志 ${count} 行"
+    suggested_actions:
+      - "rb_error_rate_circuit_break"
+
+  - id: "rca_high_p99_with_upstream_5xx"
+    category: "upstream"
+    summary: "上游 provider 5xx 激增导致 p99 攀升"
+    min_matched_conditions: 2
+    score_when_all_matched: 0.95
+    score_per_condition: 0.4
+    conditions:
+      - kind: "metric_threshold"
+        signal: "p99_latency_ms"
+        op: ">"
+        value: 1500
+        evidence_label: "p99 ${current}ms"
+      - kind: "feedback_event_count"
+        event_type: "OpsIncident"
+        topic_match: "upstream"
+        window_seconds: 300
+        count_threshold: 3
+        evidence_label: "上游事件 ${count} 次"
+      - kind: "log_pattern_count"
+        pattern: "(upstream connection timeout|5\\d\\d Bad Gateway)"
+        window_seconds: 300
+        count_threshold: 5
+        evidence_label: "上游错误日志 ${count}"
+    suggested_actions:
+      - "rb_upstream_provider_failover"
+
+  - id: "rca_token_anomaly"
+    category: "abuse"
+    summary: "tenant token 消耗异常（成本/滥用兜底）"
+    min_matched_conditions: 1
+    score_when_all_matched: 0.7
+    score_per_condition: 0.45
+    conditions:
+      - kind: "metric_threshold"
+        signal: "tokens_per_request_p99"
+        op: ">"
+        value: 5000
+        evidence_label: "tokens_per_request_p99=${current} > ${expected}"
+      - kind: "feedback_event_count"
+        event_type: "BudgetAlert"
+        topic_match: ""
+        window_seconds: 600
+        count_threshold: 1
+        evidence_label: "BudgetAlert ${count} 次"
+    suggested_actions:
+      - "rb_token_anomaly_cooldown"
+
+  - id: "rca_qps_growth"
+    category: "config"
+    summary: "QPS 持续增长触发扩容评估"
+    min_matched_conditions: 1
+    score_when_all_matched: 0.65
+    score_per_condition: 0.45
+    conditions:
+      - kind: "metric_threshold"
+        signal: "qps_predicted_30min"
+        op: ">"
+        value: 800
+        evidence_label: "30min 预测 QPS=${current} > 阈值 ${expected}"
+      - kind: "feedback_event_count"
+        event_type: "OpsIncident"
+        topic_match: "scale_hint"
+        window_seconds: 600
+        count_threshold: 1
+        evidence_label: "扩容线索事件 ${count}"
+    suggested_actions:
+      - "rb_capacity_scale_proposal"

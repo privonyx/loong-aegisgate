@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegisgate.dev/schema/provider.schema.json",
+  "title": "AegisGate Provider Manifest",
+  "description": "Machine-readable contract describing a model provider's identity, endpoint, auth, OpenAI compatibility, capabilities and conformance expectations. Used by CI, IDE, and aegisctl conformance tooling.",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "const": "aegisgate.dev/v1alpha1"
+    },
+    "kind": {
+      "type": "string",
+      "const": "ProviderManifest"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9_-]{1,64}$",
+          "description": "Globally unique identifier; also used as ConnectorFactory type."
+        },
+        "display_name": {"type": "string"},
+        "vendor": {"type": "string"},
+        "homepage": {"type": "string", "format": "uri"},
+        "documentation": {"type": "string", "format": "uri"},
+        "tags": {"type": "array", "items": {"type": "string"}},
+        "maturity": {
+          "type": "string",
+          "enum": ["experimental", "preview", "stable"],
+          "default": "preview"
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": ["connector", "endpoint", "auth", "compatibility"],
+      "additionalProperties": false,
+      "properties": {
+        "connector": {
+          "type": "object",
+          "required": ["kind"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": ["openai", "claude", "external"],
+              "description": "openai / claude map to built-in connectors; external is reserved for gRPC sidecar (Phase 10.1.3)."
+            }
+          }
+        },
+        "endpoint": {
+          "type": "object",
+          "required": ["base_url_default"],
+          "additionalProperties": false,
+          "properties": {
+            "base_url_default": {
+              "type": "string",
+              "pattern": "^https?://"
+            },
+            "base_url_env": {"type": "string"},
+            "timeout_ms_default": {"type": "integer", "minimum": 0, "default": 30000},
+            "max_retries_default": {"type": "integer", "minimum": 0, "default": 2}
+          }
+        },
+        "auth": {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["bearer", "api_key_header", "query", "none"]
+            },
+            "header_name": {"type": "string"},
+            "env_var": {"type": "string"},
+            "supports_multi_key": {"type": "boolean", "default": false}
+          }
+        },
+        "compatibility": {
+          "type": "object",
+          "required": ["openai_chat_completions"],
+          "additionalProperties": false,
+          "properties": {
+            "openai_chat_completions": {
+              "type": "string",
+              "enum": ["full", "partial", "translated", "none"]
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "status"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {"type": "string"},
+                  "status": {
+                    "type": "string",
+                    "enum": ["supported", "unsupported", "translated", "ignored"]
+                  },
+                  "notes": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "streaming", "tools", "vision", "response_format", "logprobs",
+              "system_message", "temperature", "top_p", "max_tokens"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "max_context_tokens": {"type": "integer", "minimum": 0},
+              "capabilities": {
+                "type": "array",
+                "items": {"type": "string"},
+                "uniqueItems": true
+              },
+              "region_hints": {
+                "type": "array",
+                "items": {"type": "string"},
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        "conformance": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required_checks": {
+              "type": "array",
+              "items": {"type": "string"},
+              "uniqueItems": true
+            },
+            "sample_request": {"type": "object"},
+            "sample_response_shape": {"type": "object"}
+          }
+        }
+      }
+    }
+  }
+}

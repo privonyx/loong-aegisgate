@@ -1,0 +1,39 @@
+{
+  "title": "API 密钥管理",
+  "filterPlaceholder": "按租户 ID 过滤",
+  "createKey": "创建密钥",
+  "create": "创建",
+  "col": {
+    "name": "名称",
+    "prefix": "前缀",
+    "tenant": "租户",
+    "role": "角色",
+    "status": "状态",
+    "createdAt": "创建时间"
+  },
+  "action": {
+    "rotate": "轮转",
+    "revoke": "吊销"
+  },
+  "revokeTitle": "吊销 API Key",
+  "revokeConfirm": "确定要吊销 \"{{name}}\" 吗？吊销后无法恢复。",
+  "rotateTitle": "轮转 API Key",
+  "rotateConfirm": "确定要轮转 \"{{name}}\" 吗？旧密钥将被吊销，生成新密钥。",
+  "createTitle": "创建 API Key",
+  "revealTitle": "API Key 已创建",
+  "revealHint": "请立即复制保存此密钥，关闭后将无法再次查看。",
+  "saved": "我已保存",
+  "form": {
+    "userId": "用户 ID *",
+    "name": "名称",
+    "role": "角色"
+  },
+  "toast": {
+    "loadFailed": "加载失败",
+    "revoked": "API Key 已吊销",
+    "revokeFailed": "吊销失败",
+    "rotated": "API Key 已轮转",
+    "rotateFailed": "轮转失败",
+    "createFailed": "创建失败"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "title": "FinOps Autonomous Approvals",
+  "toast": {
+    "loadFailed": "Failed to load",
+    "approved": "Approved",
+    "approveFailed": "Failed to approve",
+    "rejectReasonRequired": "Please enter a rejection reason",
+    "rejected": "Rejected",
+    "rejectFailed": "Failed to reject",
+    "rollbackStarted": "Rollback initiated",
+    "rollbackFailed": "Failed to roll back"
+  },
+  "error": {
+    "title": "Unable to load FinOps approval data"
+  },
+  "stateFilters": {
+    "all": "All states",
+    "proposed": "Pending",
+    "approved": "Approved",
+    "applied": "Applied",
+    "rejected": "Rejected",
+    "rolledBack": "Rolled back"
+  },
+  "sourceFilters": {
+    "all": "All sources",
+    "costOptimizer": "Cost optimization",
+    "autoRecovery": "Self-healing",
+    "banditRouter": "Smart routing",
+    "adaptiveGuard": "Adaptive guard",
+    "workflow": "Workflow"
+  },
+  "kpi": {
+    "proposed": "Pending",
+    "applied": "Total applied",
+    "savings24h": "Est. 24h savings"
+  },
+  "filter": {
+    "label": "Filter"
+  },
+  "topTable": {
+    "title": "Top 5 estimated savings on this page",
+    "subject": "Subject",
+    "state": "State",
+    "savings24h": "Est. savings / 24h",
+    "affectedRps": "Affected RPS"
+  },
+  "empty": "No proposals under the current filters.",
+  "card": {
+    "noSubject": "(no subject)",
+    "recommendedModel": "Recommended model: ",
+    "savings": "Est. savings: ",
+    "tenant": "Tenant: "
+  },
+  "pagination": {
+    "prev": "Previous",
+    "next": "Next"
+  },
+  "drawer": {
+    "state": "State",
+    "source": "Source",
+    "proposedAt": "Submitted at",
+    "reviewer": "Reviewer",
+    "rejectReason": "Rejection reason"
+  },
+  "actions": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "rollback": "Roll back"
+  },
+  "confirm": {
+    "approveTitle": "Confirm approval?",
+    "rejectTitle": "Confirm rejection?",
+    "rollbackTitle": "Confirm rollback?",
+    "rollbackMessage": "This will immediately call applier.rollback() and write an audit entry.",
+    "defaultMessage": "This will take effect on the workflow immediately. Please confirm the decision basis has been reviewed."
+  },
+  "rejectReasonPlaceholder": "Enter rejection reason..."
+}

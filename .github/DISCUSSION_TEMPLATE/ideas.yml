@@ -1,0 +1,44 @@
+title: "[Idea] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share an idea for improving AegisGate! This is the place for early-stage brainstorming before it becomes a formal feature request.
+
+        For well-defined feature requests with clear requirements, please use the [Feature Request](https://github.com/privonyx/loong-aegisgate/issues/new?template=feature_request.yml) issue template instead.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: Describe your idea. What problem does it solve? How would it work?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which area does this idea relate to?
+      options:
+        - Core Gateway
+        - Security & Guardrails
+        - Performance & Caching
+        - Observability & Monitoring
+        - Developer Experience
+        - Deployment & Operations
+        - SDK & Client Libraries
+        - Documentation
+        - Community & Ecosystem
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any references, links, examples, or mockups that help illustrate the idea.
+    validations:
+      required: false

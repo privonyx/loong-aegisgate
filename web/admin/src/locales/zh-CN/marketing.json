@@ -1,0 +1,51 @@
+{
+  "hero": {
+    "title": "案例数据",
+    "empty": {
+      "desc": "暂无数据 —— 接入方连接并积累请求后，这里会显示真实的「相比基线节省」「缓存命中率」与「质量趋势」数字。",
+      "quickstart": "5 分钟快速上手",
+      "joinAdopters": "加入 ADOPTERS.md"
+    },
+    "scope": {
+      "global": "全局聚合",
+      "tenant": "租户 {{id}}"
+    },
+    "since": {
+      "launch": "自启动以来",
+      "date": "自 {{date}} 起"
+    },
+    "cta": {
+      "question": "想在你的系统看到这些数字？",
+      "quickstart": "5 分钟快速上手",
+      "runPrefix": "跑",
+      "estimateSuffix": "预估你的节省"
+    }
+  },
+  "quality": {
+    "label": "质量 (EMA)",
+    "factuality": "事实性",
+    "refusal": "拒答",
+    "latency": "延迟"
+  },
+  "analogy": {
+    "savedVsBaseline": "相比基线节省",
+    "baseline": "基线 ${{cost}}",
+    "equivalent": "相当于 <b>{{count}}</b> {{unit}}",
+    "unit": {
+      "coffee": "杯咖啡",
+      "lunch": "次开发者午餐",
+      "subscription": "个月度 SaaS 订阅"
+    }
+  },
+  "cache": {
+    "label": "缓存命中",
+    "hitRate": "命中率",
+    "intercepted": "已为你拦截 <b>{{count}}</b> 次重复请求",
+    "total": " / 共 {{total}} 次（{{pct}}% 拦截，相比直连 LLM API）",
+    "type": {
+      "exact": "精确",
+      "semantic": "语义",
+      "conversation": "会话"
+    }
+  }
+}

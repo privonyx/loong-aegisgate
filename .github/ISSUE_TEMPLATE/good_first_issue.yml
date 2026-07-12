@@ -1,0 +1,92 @@
+name: Good First Issue
+description: Suggest a beginner-friendly task for new contributors
+title: "[Good First Issue]: "
+labels: ["good first issue", "help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to suggest a task that would be a good starting point for new contributors.
+        Good first issues should be well-scoped, clearly described, and require minimal context to get started.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: Clearly describe what needs to be done.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Background & Context
+      description: Provide context so a newcomer can understand the relevant part of the codebase.
+      placeholder: |
+        - Which files are involved?
+        - What does the current code do?
+        - Links to relevant docs or code sections.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: What does "done" look like? List specific, verifiable criteria.
+      placeholder: |
+        - [ ] Unit test added in tests/test_xxx.cpp
+        - [ ] All existing tests pass
+        - [ ] Code follows project style (see CONTRIBUTING.md)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Estimated Difficulty
+      options:
+        - "Beginner: No C++ experience needed (docs, config, scripts)"
+        - "Easy: Basic C++ (simple function, test addition)"
+        - "Medium: Intermediate C++ (new feature in existing module)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Gateway
+        - Guardrails
+        - Cache
+        - Observability
+        - Authentication
+        - Storage
+        - CLI
+        - SDK
+        - Documentation
+        - Tests
+        - CI/CD
+        - Configuration
+    validations:
+      required: true
+
+  - type: textarea
+    id: hints
+    attributes:
+      label: Implementation Hints
+      description: Optional pointers to help the contributor get started.
+      placeholder: |
+        - Look at src/guardrail/inbound/pii_filter.h for a similar pattern
+        - The test should follow the pattern in tests/test_pii_filter.cpp
+    validations:
+      required: false
+
+  - type: textarea
+    id: resources
+    attributes:
+      label: Helpful Resources
+      description: Links to documentation, related issues, or learning materials.
+    validations:
+      required: false

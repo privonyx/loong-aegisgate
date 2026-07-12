@@ -1,0 +1,11 @@
+add_executable(test_tool_registry test_tool_registry.cpp)
+target_link_libraries(test_tool_registry PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ToolRegistryTest COMMAND test_tool_registry)
+
+add_executable(test_tool_sandbox test_tool_sandbox.cpp)
+target_link_libraries(test_tool_sandbox PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ToolSandboxTest COMMAND test_tool_sandbox)
+
+add_executable(test_orchestrator test_orchestrator.cpp)
+target_link_libraries(test_orchestrator PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME OrchestratorTest COMMAND test_orchestrator)

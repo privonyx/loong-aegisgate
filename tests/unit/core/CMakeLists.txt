@@ -1,0 +1,43 @@
+add_executable(test_pipeline test_pipeline.cpp)
+target_link_libraries(test_pipeline PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME PipelineTest COMMAND test_pipeline)
+
+add_executable(test_config test_config.cpp)
+target_link_libraries(test_config PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConfigTest COMMAND test_config WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_config_robustness test_config_robustness.cpp)
+target_link_libraries(test_config_robustness PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConfigRobustnessTest COMMAND test_config_robustness)
+
+add_executable(test_feature_gate test_feature_gate.cpp)
+target_link_libraries(test_feature_gate PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME FeatureGateTest COMMAND test_feature_gate)
+
+add_executable(test_pipeline_stream test_pipeline_stream.cpp)
+target_link_libraries(test_pipeline_stream PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME PipelineStreamTest COMMAND test_pipeline_stream)
+
+add_executable(test_crypto test_crypto.cpp)
+target_link_libraries(test_crypto PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CryptoTest COMMAND test_crypto)
+
+add_executable(test_error_codes test_error_codes.cpp)
+target_link_libraries(test_error_codes PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ErrorCodeTest COMMAND test_error_codes)
+
+add_executable(test_config_validate test_config_validate.cpp)
+target_link_libraries(test_config_validate PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConfigValidateTest COMMAND test_config_validate)
+
+add_executable(test_config_rollout test_config_rollout.cpp)
+target_link_libraries(test_config_rollout PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConfigRolloutTest COMMAND test_config_rollout)
+
+add_executable(test_config_rollout_resolve test_config_rollout_resolve.cpp)
+target_link_libraries(test_config_rollout_resolve PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConfigRolloutResolveTest COMMAND test_config_rollout_resolve)
+
+add_executable(test_strict_backends test_strict_backends.cpp)
+target_link_libraries(test_strict_backends PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME StrictBackendsTest COMMAND test_strict_backends)

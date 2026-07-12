@@ -1,0 +1,129 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in AegisGate
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please fill in as much detail as possible to help us investigate and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug.
+      placeholder: Describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Minimal steps to reproduce the behavior.
+      placeholder: |
+        1. Configure aegisgate.yaml with...
+        2. Send request: curl -X POST ...
+        3. Observe error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened? Include error messages, logs, or response bodies if applicable.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component is affected?
+      options:
+        - Gateway (routing, connectors, load balancing)
+        - Guardrails (injection, PII, topic, content filter)
+        - Cache (semantic cache, vector index, embedder)
+        - Observability (metrics, tracing, logging, cost tracking)
+        - Authentication (API keys, RBAC, SSO)
+        - Storage (SQLite, PostgreSQL, Redis)
+        - Token Optimization (compression, smart max_tokens)
+        - Server (HTTP, SSE streaming, admin API)
+        - CLI (aegisctl)
+        - SDK (Python / Node.js / Go)
+        - Configuration
+        - Deployment (Docker, Helm, docker-compose)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: AegisGate Version
+      description: "Output of `./aegisgate --version` or git commit hash"
+      placeholder: "v0.2.0 / commit abc1234"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edition
+      options:
+        - Community
+        - Enterprise
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Please provide your environment details.
+      placeholder: |
+        - OS: Ubuntu 24.04
+        - Compiler: GCC 13.2
+        - CMake: 3.28
+        - Build flags: -DBUILD_TESTS=ON -DENABLE_ONNX=ON
+        - Deployment: Docker / bare metal / Kubernetes
+    validations:
+      required: false
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant Configuration
+      description: Paste relevant sections of aegisgate.yaml or models.yaml (redact API keys!).
+      render: yaml
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste relevant log output (set `logging.level: debug` for more detail).
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to ensure this bug has not already been reported.
+          required: true
+        - label: I have redacted all API keys and sensitive information from the report.
+          required: true

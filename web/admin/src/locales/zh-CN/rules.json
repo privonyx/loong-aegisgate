@@ -1,0 +1,38 @@
+{
+  "title": "护栏规则集",
+  "newVersion": "新建版本",
+  "activate": "激活",
+  "col": {
+    "version": "版本",
+    "status": "状态",
+    "rulesCount": "规则数",
+    "createdAt": "创建时间"
+  },
+  "status": {
+    "active": "已激活",
+    "history": "历史版本"
+  },
+  "viewVersion": "查看版本 {{version}}",
+  "activateVersion": "激活版本 {{version}}",
+  "activateDialog": {
+    "title": "激活规则版本",
+    "message": "确定要激活版本 {{version}} 吗？当前激活版本将被替换。"
+  },
+  "viewer": {
+    "title": "版本 {{version}} 规则"
+  },
+  "form": {
+    "title": "新建规则版本",
+    "rulesLabel": "规则 JSON（数组）",
+    "rulesAria": "规则 JSON",
+    "invalidJson": "JSON 格式无效，请检查后重试。",
+    "submit": "创建版本"
+  },
+  "toast": {
+    "loadFailed": "加载失败",
+    "activated": "版本 {{version}} 已激活",
+    "activateFailed": "激活失败",
+    "created": "新版本已创建并激活",
+    "saveFailed": "保存失败"
+  }
+}

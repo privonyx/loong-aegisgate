@@ -1,0 +1,33 @@
+{
+  "title": "Account Security · Multi-Factor Authentication (MFA)",
+  "idle": {
+    "desc": "Enable TOTP-based multi-factor authentication to add a layer of protection to your account login.",
+    "enable": "Enable MFA"
+  },
+  "setup": {
+    "warning": "Save the secret and recovery codes below now — they won't be shown again after closing.",
+    "secretLabel": "TOTP secret (manual entry)",
+    "uriLabel": "otpauth URI (paste into Authenticator)",
+    "recoveryLabel": "Recovery codes (each usable once)",
+    "codeLabel": "Enter the 6-digit Authenticator code to finish enabling",
+    "codeAria": "Verification code",
+    "verifyEnable": "Verify and enable"
+  },
+  "enabled": {
+    "label": "MFA enabled"
+  },
+  "disable": {
+    "desc": "Disable MFA (enter your current Authenticator code)",
+    "codeAria": "Disable verification code",
+    "button": "Disable MFA"
+  },
+  "toast": {
+    "setupFailed": "MFA setup failed",
+    "enabled": "MFA enabled",
+    "verifyInvalid": "Invalid verification code",
+    "disabled": "MFA disabled",
+    "disableFailed": "Disable failed",
+    "copied": "Copied",
+    "copyFailed": "Copy failed"
+  }
+}

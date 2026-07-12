@@ -1,0 +1,6 @@
+{
+  "$comment": "overlay-ports 优先于 builtin-baseline 锁定的版本生效。这里用它强制启用 sentencepiece 0.2.1 port(SPM_PROTOBUF_PROVIDER=package),让 sentencepiece 复用 vcpkg 的 protobuf 而非内置 protobuf-lite。否则 baseline 锁的旧版 0.2.0 默认 internal provider 会把一份 protobuf-lite(arena/message_lite/strutil...)塞进 libsentencepiece.a,与 control-plane/otel 链入的真 protobuf 符号重复,运行时 descriptor 初始化混用两份不兼容 protobuf 导致启动即段错误。",
+  "overlay-ports": [
+    "./vcpkg-overlay-ports"
+  ]
+}

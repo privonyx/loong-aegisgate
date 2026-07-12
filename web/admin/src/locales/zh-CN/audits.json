@@ -1,0 +1,21 @@
+{
+  "title": "审计日志",
+  "toast": {
+    "loadFailed": "加载失败"
+  },
+  "filter": {
+    "tenant": "按租户 ID 过滤"
+  },
+  "columns": {
+    "timestamp": "时间",
+    "requestId": "请求ID",
+    "tenant": "租户",
+    "stage": "阶段",
+    "detail": "详情"
+  },
+  "mode": {
+    "live": "实时模式",
+    "history": "历史模式"
+  },
+  "exportDialogTitle": "导出审计日志"
+}

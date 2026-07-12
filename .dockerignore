@@ -1,0 +1,29 @@
+# VCS (large, not needed in build context)
+.git
+.gitattributes
+.gitignore
+
+# Local / CI build trees (never send to daemon)
+build/
+build-release/
+out/
+cmake-build-*/
+
+# Persistent dev memory / Cursor (not used by Dockerfile COPY)
+memory-bank/
+.cursor/
+
+# Docs and audit artifacts (not copied into image)
+docs/
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Logs and caches
+*.log
+.cache/

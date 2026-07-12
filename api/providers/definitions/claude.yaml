@@ -1,0 +1,67 @@
+apiVersion: aegisgate.dev/v1alpha1
+kind: ProviderManifest
+metadata:
+  name: claude
+  display_name: Anthropic Claude
+  vendor: Anthropic
+  homepage: https://www.anthropic.com
+  documentation: https://docs.anthropic.com/claude/reference
+  tags: [commercial, chat, tools, vision]
+  maturity: stable
+spec:
+  connector:
+    kind: claude
+  endpoint:
+    base_url_default: https://api.anthropic.com
+    base_url_env: CLAUDE_BASE_URL
+    timeout_ms_default: 60000
+    max_retries_default: 1
+  auth:
+    type: api_key_header
+    header_name: x-api-key
+    env_var: CLAUDE_API_KEY
+    supports_multi_key: true
+  compatibility:
+    openai_chat_completions: translated
+    fields:
+      - name: messages
+        status: translated
+        notes: OpenAI-shape messages[] is translated into Anthropic tool_use / tool_result blocks where required.
+      - name: tools
+        status: translated
+        notes: OpenAI tool_calls <-> Anthropic tool_use format translation handled by ClaudeConnector.
+      - name: tool_choice
+        status: supported
+      - name: response_format
+        status: unsupported
+      - name: stream
+        status: supported
+      - name: logprobs
+        status: unsupported
+  capabilities:
+    - streaming
+    - tools
+    - vision
+    - system_message
+    - temperature
+    - top_p
+    - max_tokens
+  models:
+    - id: claude-sonnet-4-20250514
+      max_context_tokens: 200000
+      capabilities: [streaming, tools, vision]
+      region_hints: [us-east]
+  conformance:
+    required_checks:
+      - manifest-shape
+      - auth-defined
+      - compatibility-declared
+      - capability-enum
+      - models-unique
+      - sample-request-shape
+    sample_request:
+      model: claude-sonnet-4-20250514
+      messages:
+        - role: user
+          content: ping
+      max_tokens: 16

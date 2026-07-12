@@ -1,0 +1,71 @@
+apiVersion: aegisgate.dev/v1alpha1
+kind: ProviderManifest
+metadata:
+  name: gemini
+  display_name: Google Gemini
+  vendor: Google
+  homepage: https://ai.google.dev
+  documentation: https://ai.google.dev/gemini-api/docs/openai
+  tags: [commercial, chat, tools, vision, multimodal]
+  maturity: preview
+spec:
+  connector:
+    kind: openai
+  endpoint:
+    base_url_default: https://generativelanguage.googleapis.com/v1beta/openai
+    base_url_env: GEMINI_BASE_URL
+    timeout_ms_default: 30000
+    max_retries_default: 2
+  auth:
+    type: bearer
+    header_name: Authorization
+    env_var: GEMINI_API_KEY
+    supports_multi_key: true
+  compatibility:
+    openai_chat_completions: full
+    fields:
+      - name: messages
+        status: supported
+      - name: tools
+        status: supported
+      - name: tool_choice
+        status: supported
+      - name: response_format
+        status: supported
+      - name: stream
+        status: supported
+      - name: logprobs
+        status: unsupported
+  capabilities:
+    - streaming
+    - tools
+    - vision
+    - response_format
+    - system_message
+    - temperature
+    - top_p
+    - max_tokens
+  models:
+    - id: gemini-2.0-flash
+      max_context_tokens: 1048576
+      capabilities: [streaming, tools, vision, response_format]
+      region_hints: [us-east, eu-central, ap-east]
+    - id: gemini-2.5-pro-preview-05-06
+      max_context_tokens: 1048576
+      capabilities: [streaming, tools, vision, response_format]
+      region_hints: [us-east, eu-central, ap-east]
+  conformance:
+    required_checks:
+      - manifest-shape
+      - auth-defined
+      - compatibility-declared
+      - fields-coverage
+      - capability-enum
+      - models-unique
+      - sample-request-shape
+    sample_request:
+      model: gemini-2.0-flash
+      messages:
+        - role: user
+          content: ping
+      max_tokens: 16

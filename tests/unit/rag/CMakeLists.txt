@@ -1,0 +1,7 @@
+add_executable(test_knowledge_base test_knowledge_base.cpp)
+target_link_libraries(test_knowledge_base PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME KnowledgeBaseTest COMMAND test_knowledge_base)
+
+add_executable(test_retrieval_stage test_retrieval_stage.cpp)
+target_link_libraries(test_retrieval_stage PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RetrievalStageTest COMMAND test_retrieval_stage)

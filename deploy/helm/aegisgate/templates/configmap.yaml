@@ -1,0 +1,166 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aegisgate.fullname" . }}
+  labels:
+    {{- include "aegisgate.labels" . | nindent 4 }}
+data:
+  aegisgate.yaml: |
+    server:
+      host: {{ .Values.config.serverHost | quote }}
+      port: {{ .Values.config.serverPort }}
+      threads: {{ .Values.config.serverThreads }}
+
+    edition: {{ .Values.config.edition | quote }}
+    license_file: ""
+
+    models_config: {{ .Values.config.modelsConfigPath | quote }}
+
+    auth:
+      enabled: {{ .Values.auth.enabled }}
+      {{- if and .Values.auth.enabled .Values.auth.apiKeys }}
+      api_keys:
+        {{- range $i, $_ := .Values.auth.apiKeys }}
+        - "${{ if eq $i 0 }}AEGISGATE_API_KEY{{ else }}AEGISGATE_API_KEY_{{ $i }}{{ end }}"
+        {{- end }}
+      {{- else }}
+      api_keys: []
+      {{- end }}
+      admin_key: "${AEGISGATE_ADMIN_KEY}"
+
+    rbac:
+      enabled: false
+
+    tls:
+      enabled: false
+      port: 0
+      cert_path: ""
+      key_path: ""
+
+    audit:
+      log_path: "logs/audit.log"
+      retention_days: 0
+
+    rate_limit:
+      max_tokens: 10000.0
+      refill_rate: 100.0
+
+    limits:
+      max_request_body_size: 65536
+      max_connections: 10000
+
+    features:
+      routing:
+        mode: basic
+      guardrail:
+        custom_rules: false
+      management:
+        mode: cli
+      deployment:
+        mode: cluster
+
+    storage:
+      {{- if .Values.redis.enabled }}
+      cache_backend: redis
+      {{- else }}
+      cache_backend: memory
+      {{- end }}
+      {{- if .Values.postgresql.enabled }}
+      persistent_backend: postgres
+      {{- else }}
+      persistent_backend: sqlite
+      {{- end }}
+      sqlite:
+        path: "data/aegisgate.db"
+        wal_mode: true
+      redis:
+        host: {{ .Values.redis.host | quote }}
+        port: {{ .Values.redis.port }}
+        password: "${REDIS_PASSWORD}"
+        db: {{ .Values.redis.db }}
+        pool_size: {{ .Values.redis.poolSize }}
+        connect_timeout_ms: {{ .Values.redis.connectTimeoutMs }}
+        command_timeout_ms: {{ .Values.redis.commandTimeoutMs }}
+      postgres:
+        url: "${POSTGRES_URL}"
+        pool_size: {{ .Values.postgresql.poolSize }}
+        connect_timeout_ms: {{ .Values.postgresql.connectTimeoutMs }}
+
+    embedding:
+      model_path: "models/bge-small-zh-v1.5.onnx"
+      vocab_path: "models/vocab.txt"
+
+    cache:
+      threshold: 0.95
+      ttl_seconds: 3600
+      max_entries: 10000
+      max_partitions: 64
+      context_aware: true
+      warmup_file: ""
+      adaptive_threshold:
+        enabled: false
+        min_threshold: 0.85
+        max_threshold: 0.98
+        adjustment_rate: 0.01
+        window_size: 100
+      policy:
+        enabled: true
+        skip_models: []
+        max_temperature: 1.0
+        skip_streaming: false
+
+    security:
+      unicode_normalization: true
+      encoding_detection: true
+      encoding_min_base64_length: 20
+      guard_model:
+        enabled: false
+        model_path: "models/safety-classifier.onnx"
+        vocab_path: "models/vocab.txt"
+        threshold: 0.5
+      abuse_detection:
+        enabled: true
+        window_seconds: 300
+        warn_threshold: 5
+        throttle_threshold: 10
+        block_threshold: 20
+        block_duration_seconds: 1800
+
+    telemetry:
+      enabled: false
+      otlp_endpoint: "http://localhost:4318"
+      service_name: "aegisgate"
+      sample_ratio: 1.0
+
+    admin:
+      jwt_secret: ""
+      jwt_expire_seconds: 28800
+      cors_origins: ["http://localhost:5173"]
+      static_dir: "web/admin/dist"
+
+    logging:
+      level: {{ .Values.config.logLevel | quote }}
+      file: ""
+
+  models.yaml: |
+{{- if .Values.config.modelsYaml }}
+{{ .Values.config.modelsYaml | nindent 4 }}
+{{- else }}
+    providers:
+      - name: openai
+        type: openai
+        base_url: "https://api.openai.com/v1"
+        api_keys:
+          - key: "${OPENAI_API_KEY}"
+            weight: 1
+        models:
+          - id: "gpt-4o-mini"
+            cost_per_1k_input: 0.00015
+            cost_per_1k_output: 0.0006
+            max_tokens: 128000
+            tags: [fast, cheap]
+        timeout_ms: 30000
+        max_retries: 2
+    default_model: "gpt-4o-mini"
+    fallback_chains: {}
+{{- end }}

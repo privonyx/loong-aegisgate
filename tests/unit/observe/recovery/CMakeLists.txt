@@ -1,0 +1,33 @@
+# Phase 11.4 self-healing ops (TASK-20260519-01) — Epic 1.
+
+add_executable(test_auto_recovery_controller test_auto_recovery_controller.cpp)
+target_link_libraries(test_auto_recovery_controller PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AutoRecoveryControllerTest COMMAND test_auto_recovery_controller)
+
+add_executable(test_log_ringbuffer_sink test_log_ringbuffer_sink.cpp)
+target_link_libraries(test_log_ringbuffer_sink PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME LogRingbufferSinkTest COMMAND test_log_ringbuffer_sink)
+
+add_executable(test_feedback_event_history test_feedback_event_history.cpp)
+target_link_libraries(test_feedback_event_history PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME FeedbackEventHistoryTest COMMAND test_feedback_event_history)
+
+add_executable(test_recovery_applier test_recovery_applier.cpp)
+target_link_libraries(test_recovery_applier PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RecoveryApplierTest COMMAND test_recovery_applier)
+
+add_executable(test_root_cause_analyzer test_root_cause_analyzer.cpp)
+target_link_libraries(test_root_cause_analyzer PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RootCauseAnalyzerTest COMMAND test_root_cause_analyzer)
+
+add_executable(test_capacity_predictor test_capacity_predictor.cpp)
+target_link_libraries(test_capacity_predictor PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CapacityPredictorTest COMMAND test_capacity_predictor)
+
+add_executable(test_runbook_engine test_runbook_engine.cpp)
+target_link_libraries(test_runbook_engine PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RunbookEngineTest COMMAND test_runbook_engine)
+
+add_executable(test_self_healing_integration test_self_healing_integration.cpp)
+target_link_libraries(test_self_healing_integration PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME SelfHealingIntegrationTest COMMAND test_self_healing_integration)

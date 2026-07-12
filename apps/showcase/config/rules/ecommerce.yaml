@@ -1,0 +1,40 @@
+# 电商导购场景护栏规则（合规引擎）
+# 覆盖电商高频合规风险：违禁/管制商品、虚假宣传/极限词、PII 脱敏。
+version: 1
+rules:
+  - id: ecom-block-prohibited-goods
+    description: "拦截违禁 / 管制商品关键词"
+    priority: 100
+    enabled: true
+    conditions:
+      - type: regex_match
+        value: "(?i)(枪支|弹药|毒品|管制刀具|象牙|发票代开|fake\\s*id)"
+    action: block
+
+  - id: ecom-warn-superlative
+    description: "极限词 / 虚假宣传告警（广告法风险）"
+    priority: 80
+    enabled: true
+    conditions:
+      - type: regex_match
+        value: "(?i)(国家级|最佳|第一品牌|100%有效|根治|包治|绝对|永不)"
+    action: warn
+
+  - id: ecom-redact-pii-phone
+    description: "脱敏手机号"
+    priority: 70
+    enabled: true
+    conditions:
+      - type: regex_match
+        value: "(?<!\\d)1[3-9]\\d{9}(?!\\d)"
+    action: modify
+    action_param: "[已脱敏手机号]"
+
+  - id: ecom-warn-overlong
+    description: "单次输入超长告警"
+    priority: 50
+    enabled: true
+    conditions:
+      - type: length_check
+        value: "50000"
+    action: warn

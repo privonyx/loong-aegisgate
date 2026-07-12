@@ -1,0 +1,22 @@
+{
+  "title": "用量与预算预测",
+  "toast": {
+    "loadFailed": "加载预测失败"
+  },
+  "historyDays": "历史天数",
+  "forecastDays": "预测天数",
+  "budget": "预算 $",
+  "budgetAria": "预算",
+  "stat": {
+    "dailyTrend": "日趋势 ($/天)",
+    "rSquared": "拟合优度 R²",
+    "exhaustionDate": "预算耗尽日",
+    "sufficient": "充足",
+    "budgetSubtitle": "预算 ${{budget}}"
+  },
+  "chart": {
+    "title": "历史成本 vs 预测成本",
+    "historical": "历史",
+    "predicted": "预测"
+  }
+}

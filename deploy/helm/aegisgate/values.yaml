@@ -1,0 +1,112 @@
+# Default values for aegisgate.
+# Override via helm install -f or --set; use ExternalSecrets in production for credentials.
+
+replicaCount: 2
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: aegisgate
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 8080
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: aegisgate.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  # Maps to HPA averageUtilization (CPU %).
+  targetCPUUtilization: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+redis:
+  enabled: true
+  host: redis
+  port: 6379
+  password: ""
+  db: 0
+  poolSize: 4
+  connectTimeoutMs: 3000
+  commandTimeoutMs: 1000
+
+postgresql:
+  enabled: true
+  url: "postgres://aegisgate:password@postgresql:5432/aegisgate"
+  poolSize: 4
+  connectTimeoutMs: 5000
+
+# Application config (non-secret). Sensitive values use ${ENV} and are injected from Secret.
+config:
+  edition: enterprise
+  serverHost: "0.0.0.0"
+  serverPort: 8080
+  serverThreads: 0
+  logLevel: info
+  modelsConfigPath: config/models.yaml
+  # Inline models.yaml body; empty string uses chart default minimal models config.
+  modelsYaml: ""
+
+auth:
+  enabled: true
+  apiKeys: []
+  adminKey: ""
+
+# Extra environment variables (e.g. OPENAI_API_KEY from external secret).
+extraEnv: []
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+probes:
+  readiness:
+    path: /health/ready
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  liveness:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3

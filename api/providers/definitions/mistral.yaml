@@ -1,0 +1,70 @@
+apiVersion: aegisgate.dev/v1alpha1
+kind: ProviderManifest
+metadata:
+  name: mistral
+  display_name: Mistral AI
+  vendor: Mistral AI
+  homepage: https://mistral.ai
+  documentation: https://docs.mistral.ai/api
+  tags: [commercial, chat, tools]
+  maturity: stable
+spec:
+  connector:
+    kind: openai
+  endpoint:
+    base_url_default: https://api.mistral.ai/v1
+    base_url_env: MISTRAL_BASE_URL
+    timeout_ms_default: 30000
+    max_retries_default: 2
+  auth:
+    type: bearer
+    header_name: Authorization
+    env_var: MISTRAL_API_KEY
+    supports_multi_key: true
+  compatibility:
+    openai_chat_completions: full
+    fields:
+      - name: messages
+        status: supported
+      - name: tools
+        status: supported
+      - name: tool_choice
+        status: supported
+      - name: response_format
+        status: supported
+      - name: stream
+        status: supported
+      - name: logprobs
+        status: unsupported
+  capabilities:
+    - streaming
+    - tools
+    - response_format
+    - system_message
+    - temperature
+    - top_p
+    - max_tokens
+  models:
+    - id: mistral-small-latest
+      max_context_tokens: 32768
+      capabilities: [streaming, tools, response_format]
+      region_hints: [eu-central]
+    - id: mistral-large-latest
+      max_context_tokens: 131072
+      capabilities: [streaming, tools, response_format]
+      region_hints: [eu-central, us-east]
+  conformance:
+    required_checks:
+      - manifest-shape
+      - auth-defined
+      - compatibility-declared
+      - fields-coverage
+      - capability-enum
+      - models-unique
+      - sample-request-shape
+    sample_request:
+      model: mistral-small-latest
+      messages:
+        - role: user
+          content: ping
+      max_tokens: 16

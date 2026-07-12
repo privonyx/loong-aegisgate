@@ -1,0 +1,34 @@
+{
+  "title": "SSO Identity Providers",
+  "newConfig": "New SSO Config",
+  "editConfig": "Edit SSO Config",
+  "create": "Create",
+  "col": {
+    "name": "Name",
+    "secret": "Secret",
+    "status": "Status"
+  },
+  "secretConfigured": "Configured",
+  "secretMissing": "Not configured",
+  "enabled": "Enabled",
+  "disabled": "Disabled",
+  "deleteTitle": "Delete SSO Config",
+  "deleteConfirm": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+  "form": {
+    "name": "Name",
+    "clientSecret": "Client Secret",
+    "secretPlaceholder": "Leave empty = keep unchanged",
+    "scopes": "Scopes (comma-separated)",
+    "defaultRole": "Default Role",
+    "jit": "JIT Provisioning",
+    "enabledLabel": "Enabled"
+  },
+  "toast": {
+    "loadFailed": "Load failed",
+    "deleted": "SSO config deleted",
+    "deleteFailed": "Delete failed",
+    "updated": "SSO config updated",
+    "created": "SSO config created",
+    "saveFailed": "Save failed"
+  }
+}

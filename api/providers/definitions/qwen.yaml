@@ -1,0 +1,68 @@
+apiVersion: aegisgate.dev/v1alpha1
+kind: ProviderManifest
+metadata:
+  name: qwen
+  display_name: Alibaba Qwen (DashScope)
+  vendor: Alibaba Cloud
+  homepage: https://dashscope.aliyun.com
+  documentation: https://help.aliyun.com/zh/dashscope
+  tags: [commercial, chat, tools, chinese]
+  maturity: stable
+spec:
+  connector:
+    kind: openai
+  endpoint:
+    base_url_default: https://dashscope.aliyuncs.com/compatible-mode/v1
+    base_url_env: QWEN_BASE_URL
+    timeout_ms_default: 30000
+    max_retries_default: 2
+  auth:
+    type: bearer
+    header_name: Authorization
+    env_var: QWEN_API_KEY
+    supports_multi_key: true
+  compatibility:
+    openai_chat_completions: full
+    fields:
+      - name: messages
+        status: supported
+      - name: tools
+        status: supported
+      - name: tool_choice
+        status: supported
+      - name: response_format
+        status: supported
+        notes: json_object supported; json_schema is partially supported.
+      - name: stream
+        status: supported
+      - name: logprobs
+        status: unsupported
+  capabilities:
+    - streaming
+    - tools
+    - vision
+    - response_format
+    - system_message
+    - temperature
+    - top_p
+    - max_tokens
+  models:
+    - id: qwen-plus
+      max_context_tokens: 131072
+      capabilities: [streaming, tools, response_format]
+      region_hints: [ap-east]
+  conformance:
+    required_checks:
+      - manifest-shape
+      - auth-defined
+      - compatibility-declared
+      - fields-coverage
+      - capability-enum
+      - models-unique
+      - sample-request-shape
+    sample_request:
+      model: qwen-plus
+      messages:
+        - role: user
+          content: ping
+      max_tokens: 16

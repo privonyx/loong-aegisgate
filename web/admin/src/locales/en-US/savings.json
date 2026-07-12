@@ -1,0 +1,102 @@
+{
+  "title": "Savings Overview",
+  "toast": {
+    "loadFailed": "Failed to load"
+  },
+  "error": {
+    "title": "Unable to load savings data"
+  },
+  "windows": {
+    "24h": "Last 24 hours",
+    "7d": "Last 7 days",
+    "30d": "Last 30 days",
+    "all": "All"
+  },
+  "algoButton": {
+    "title": "See how savings are calculated",
+    "label": "Methodology"
+  },
+  "aggregator": {
+    "since": "Data starts from ",
+    "window": " (in-process aggregation, resets on restart). Current window: ",
+    "separator": " ~ ",
+    "end": "."
+  },
+  "algo": {
+    "title": "Savings calculation methodology",
+    "cacheHit": {
+      "term": "Cache hit savings",
+      "body1": ": When the semantic cache hits, AegisGate skips the upstream LLM call. Savings = estimated input + output tokens × the model's per-1K-token price. The input tokens come from the request's actual value (set by PromptCompressor); output tokens are estimated for cached_response via",
+      "body2": "."
+    },
+    "compression": {
+      "term": "Prompt compression savings",
+      "body": ": After PromptCompressor compresses the input segment, the original length minus the compressed length is the tokens saved; the amount is computed at the target model's price (input segment only)."
+    },
+    "routing": {
+      "term": "Smart routing (potential)",
+      "body": ": The potential savings reported when CostOptimizer recommends switching to a cheaper model. This has not actually happened yet (it is a suggestion) and is marked separately as routing_potential to avoid overstating realized savings."
+    },
+    "fallback": {
+      "lead": "There were ",
+      "mid": " events this period that used degraded estimation (cost = 0) due to missing model pricing, but the token counts are still recorded accurately. Please configure",
+      "tail": " to complete the price table."
+    }
+  },
+  "kpi": {
+    "costSaved": "Total saved",
+    "costActual": "Actual spend",
+    "cacheHits": "Cache hits"
+  },
+  "sourceSplit": {
+    "title": "Savings source breakdown",
+    "empty": "No savings events in the current window"
+  },
+  "trend": {
+    "title": "Savings over time",
+    "empty": "No trend data in the current window",
+    "lineName": "Savings"
+  },
+  "modelCompare": {
+    "title": "Savings by model",
+    "empty": "No model savings events in the current window",
+    "barName": "Saved ($)"
+  },
+  "routing": {
+    "title": "Smart routing suggestions (potential savings)",
+    "empty": "CostOptimizer has no actionable switch suggestions",
+    "route": "Route",
+    "potential": "Potential savings",
+    "events": "Events"
+  },
+  "modality": {
+    "title": "Attribution by modality (preview)",
+    "hint": "Heuristic classification based on model name (embedding / image / whisper / tts / moderation / chat). Will later integrate",
+    "hintTail": "dimension's precise data (Epic 5.1c).",
+    "empty": "No attributable events in the current window",
+    "modality": "Modality",
+    "costSaved": "Savings",
+    "tokensSaved": "Tokens saved",
+    "requests": "Requests"
+  },
+  "topTenants": {
+    "title": "Top {{count}} tenants by savings (SuperAdmin only)",
+    "tenantId": "Tenant ID",
+    "costSaved": "Savings",
+    "tokensSaved": "Tokens saved",
+    "events": "Events"
+  },
+  "typeLabels": {
+    "cache_hit": "Semantic cache hit",
+    "compression": "Prompt compression",
+    "routing_potential": "Smart routing (potential)"
+  },
+  "modalityLabels": {
+    "embedding": "Embedding",
+    "image_gen": "Image generation",
+    "audio_transcribe": "Speech transcription (Whisper)",
+    "audio_speech": "Speech synthesis (TTS)",
+    "moderation": "Moderation",
+    "chat": "Chat / Completion"
+  }
+}

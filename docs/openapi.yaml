@@ -1,0 +1,1202 @@
+openapi: 3.1.0
+info:
+  title: AegisGate API
+  version: 1.0.0
+  description: |
+    AegisGate AI Gateway — unified API proxy with security guardrails, smart routing,
+    semantic caching, and observability.
+
+    Error responses use a consistent JSON envelope (`ErrorResponse`) with AEGIS error codes
+    and links to the error catalog.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: Chat
+    description: OpenAI-compatible chat completions
+  - name: Embeddings
+    description: Text embeddings proxy
+  - name: Images
+    description: Image generation proxy
+  - name: Audio
+    description: Audio transcription, translation, and speech proxy
+  - name: Models
+    description: Model listing
+  - name: Health
+    description: Liveness and version
+  - name: Metrics
+    description: Prometheus exposition
+  - name: Cache
+    description: Semantic cache statistics
+  - name: Admin
+    description: Administrative operations (admin API key)
+  - name: Documentation
+    description: API docs and machine-readable spec
+
+paths:
+  /v1/chat/completions:
+    post:
+      tags: [Chat]
+      summary: Create chat completion
+      description: |
+        OpenAI-compatible chat completions. When `stream` is `true`, the response is
+        **Server-Sent Events** (`text/event-stream`); each `data:` line is a JSON object
+        with `object: "chat.completion.chunk"`.
+      operationId: createChatCompletion
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCompletionsRequest'
+            examples:
+              nonStreaming:
+                summary: Non-streaming request
+                value:
+                  model: gpt-4o
+                  messages:
+                    - role: system
+                      content: You are a helpful assistant.
+                    - role: user
+                      content: Hello!
+                  temperature: 0.7
+                  max_tokens: 256
+                  stream: false
+              streaming:
+                summary: Streaming (SSE)
+                value:
+                  model: gpt-4o
+                  messages:
+                    - role: user
+                      content: Count to three.
+                  stream: true
+      responses:
+        '200':
+          description: |
+            Non-streaming JSON when `stream` is false or omitted; SSE when `stream` is true.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatCompletionsResponse'
+              examples:
+                completion:
+                  value:
+                    id: chatcmpl-example
+                    object: chat.completion
+                    model: gpt-4o
+                    choices:
+                      - index: 0
+                        message:
+                          role: assistant
+                          content: Hello! How can I help?
+                        finish_reason: stop
+                    usage:
+                      prompt_tokens: 12
+                      completion_tokens: 8
+                      total_tokens: 20
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  SSE stream. Each event body (after `data: `) is JSON matching
+                  `ChatCompletionChunk`. The stream may end with `data: [DONE]`.
+              examples:
+                chunk:
+                  value: |
+                    data: {"id":"chatcmpl-example","object":"chat.completion.chunk","model":"gpt-4o","choices":[{"index":0,"delta":{"content":"Hello"},"finish_reason":null}]}
+
+                    data: [DONE]
+
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/SecurityError'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '502':
+          $ref: '#/components/responses/RoutingUpstreamError'
+        '503':
+          $ref: '#/components/responses/SystemError'
+        '504':
+          $ref: '#/components/responses/UpstreamTimeout'
+
+  /v1/embeddings:
+    post:
+      tags: [Embeddings]
+      summary: Create embeddings
+      description: |
+        Proxy endpoint for creating text embeddings. Forwards the request to the upstream
+        provider that supports the specified model. Compatible with the OpenAI Embeddings API.
+      operationId: createEmbeddings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmbeddingsRequest'
+            examples:
+              singleInput:
+                summary: Single text embedding
+                value:
+                  model: text-embedding-3-small
+                  input: "The food was delicious"
+              batchInput:
+                summary: Batch embeddings
+                value:
+                  model: text-embedding-3-small
+                  input: ["Hello world", "Goodbye world"]
+      responses:
+        '200':
+          description: Embedding vectors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmbeddingsResponse'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '404':
+          $ref: '#/components/responses/UnsupportedEndpointError'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '502':
+          $ref: '#/components/responses/RoutingUpstreamError'
+
+  /v1/images/generations:
+    post:
+      tags: [Images]
+      summary: Create image
+      description: |
+        Proxy endpoint for image generation. Forwards the request to the upstream provider.
+        Compatible with the OpenAI Images API.
+      operationId: createImage
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageGenerationRequest'
+            examples:
+              basic:
+                value:
+                  model: dall-e-3
+                  prompt: "a white siamese cat"
+                  n: 1
+                  size: "1024x1024"
+      responses:
+        '200':
+          description: Generated image(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageGenerationResponse'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '404':
+          $ref: '#/components/responses/UnsupportedEndpointError'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '502':
+          $ref: '#/components/responses/RoutingUpstreamError'
+
+  /v1/audio/transcriptions:
+    post:
+      tags: [Audio]
+      summary: Create transcription
+      description: |
+        Proxy endpoint for audio transcription (speech-to-text). Forwards the request
+        to the upstream provider. Compatible with the OpenAI Audio Transcriptions API.
+      operationId: createTranscription
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AudioTranscriptionRequest'
+      responses:
+        '200':
+          description: Transcription result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AudioTranscriptionResponse'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '404':
+          $ref: '#/components/responses/UnsupportedEndpointError'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '502':
+          $ref: '#/components/responses/RoutingUpstreamError'
+
+  /v1/audio/translations:
+    post:
+      tags: [Audio]
+      summary: Create translation
+      description: |
+        Proxy endpoint for audio translation. Translates audio into English.
+        Forwards the request to the upstream provider. Compatible with the OpenAI Audio
+        Translations API.
+      operationId: createTranslation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AudioTranslationRequest'
+      responses:
+        '200':
+          description: Translation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AudioTranscriptionResponse'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '404':
+          $ref: '#/components/responses/UnsupportedEndpointError'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '502':
+          $ref: '#/components/responses/RoutingUpstreamError'
+
+  /v1/audio/speech:
+    post:
+      tags: [Audio]
+      summary: Create speech
+      description: |
+        Proxy endpoint for text-to-speech. Generates audio from the input text.
+        Forwards the request to the upstream provider. Compatible with the OpenAI Audio
+        Speech API.
+      operationId: createSpeech
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AudioSpeechRequest'
+            examples:
+              basic:
+                value:
+                  model: tts-1
+                  input: "Hello world"
+                  voice: alloy
+      responses:
+        '200':
+          description: Audio file
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '404':
+          $ref: '#/components/responses/UnsupportedEndpointError'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '502':
+          $ref: '#/components/responses/RoutingUpstreamError'
+
+  /v1/models:
+    get:
+      tags: [Models]
+      summary: List models
+      operationId: listModels
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Available models configured on the gateway
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelListResponse'
+              examples:
+                list:
+                  value:
+                    object: list
+                    data:
+                      - id: gpt-4o
+                        object: model
+                        owned_by: openai
+                        permission: []
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/SecurityError'
+
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: Gateway is reachable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                ok:
+                  value:
+                    status: ok
+                    version: 1.0.0
+                    initialized: true
+
+  /metrics:
+    get:
+      tags: [Metrics]
+      summary: Prometheus metrics
+      description: Returns metrics in Prometheus text exposition format.
+      operationId: getMetrics
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Prometheus text format
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                sample:
+                  value: |
+                    # HELP aegisgate_requests_total Total HTTP requests
+                    # TYPE aegisgate_requests_total counter
+                    aegisgate_requests_total 42
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/SecurityError'
+
+  /cache/stats:
+    get:
+      tags: [Cache]
+      summary: Cache statistics
+      operationId: getCacheStats
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Semantic cache counters and configuration snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheStatsResponse'
+              examples:
+                stats:
+                  value:
+                    hit_count: 1200
+                    miss_count: 300
+                    put_count: 280
+                    entry_count: 150
+                    hit_rate: 0.8
+                    current_threshold: 0.92
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/SecurityError'
+        '503':
+          $ref: '#/components/responses/SystemError'
+
+  /admin/reload:
+    post:
+      tags: [Admin]
+      summary: Reload configuration
+      operationId: adminReloadConfig
+      security:
+        - AdminAuth: []
+      responses:
+        '200':
+          description: Reload attempted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminReloadResponse'
+              examples:
+                success:
+                  value:
+                    status: reloaded
+                    message: Configuration reloaded successfully.
+                failure:
+                  value:
+                    status: error
+                    message: Failed to parse config file.
+        '401':
+          $ref: '#/components/responses/AdminAuthenticationError'
+        '403':
+          $ref: '#/components/responses/SecurityError'
+
+  /admin/cache/import:
+    post:
+      tags: [Admin]
+      summary: Import cache entries
+      operationId: adminCacheImport
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CacheImportRequest'
+            examples:
+              batch:
+                value:
+                  - prompt: What is 2+2?
+                    response: '4'
+                    model: gpt-4o
+                  - prompt: Capital of France?
+                    response: Paris
+                    model: gpt-4o
+      responses:
+        '200':
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheImportResponse'
+              examples:
+                imported:
+                  value:
+                    imported: 2
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/AdminAuthenticationError'
+        '403':
+          $ref: '#/components/responses/SecurityError'
+
+  /admin/logs/stream:
+    get:
+      tags: [Admin]
+      summary: Real-time audit log stream (SSE)
+      description: |
+        Server-Sent Events stream of audit events. Filter with optional query parameters.
+        Each `data:` line is a JSON object (see `AuditLogEvent`).
+      operationId: adminLogsStream
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: level
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Minimum log level filter (e.g. info, warn, error).
+          example: info
+        - name: api_key
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter events associated with this caller API key (opaque id or prefix, gateway-defined).
+      responses:
+        '200':
+          description: SSE stream of audit events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              examples:
+                event:
+                  value: |
+                    data: {"ts":"2026-03-22T12:00:00Z","level":"info","event":"request.completed","route":"/v1/chat/completions"}
+
+        '401':
+          $ref: '#/components/responses/AdminAuthenticationError'
+        '403':
+          $ref: '#/components/responses/SecurityError'
+
+  /docs:
+    get:
+      tags: [Documentation]
+      summary: Interactive API documentation
+      description: HTML page (e.g. Scalar or Swagger UI) for exploring the API.
+      operationId: getDocs
+      security: []
+      responses:
+        '200':
+          description: Documentation HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /openapi.json:
+    get:
+      tags: [Documentation]
+      summary: OpenAPI specification (JSON)
+      description: |
+        Machine-readable OpenAPI document. May be generated from this YAML source;
+        clients and `/docs` UIs typically consume this endpoint.
+      operationId: getOpenApiJson
+      security: []
+      responses:
+        '200':
+          description: OpenAPI 3.x JSON document
+          content:
+            application/json:
+              schema:
+                type: object
+                description: OpenAPI root document (JSON)
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: Standard gateway API key as a Bearer token.
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Admin API Key
+      description: Administrative API key as a Bearer token (required for `/admin/*` routes).
+
+  schemas:
+    ChatCompletionsRequest:
+      type: object
+      required: [model, messages]
+      properties:
+        model:
+          type: string
+          description: Target model id.
+          example: gpt-4o
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        temperature:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 2
+          description: Sampling temperature.
+        max_tokens:
+          type: integer
+          minimum: 1
+          description: Maximum tokens to generate.
+        stream:
+          type: boolean
+          default: false
+          description: If true, response is SSE (`text/event-stream`).
+        extra:
+          type: object
+          description: Gateway-specific or forward-compatible extension fields.
+          additionalProperties: true
+
+    ChatMessage:
+      type: object
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          enum: [system, user, assistant]
+        content:
+          type: string
+
+    ChatCompletionsResponse:
+      type: object
+      required: [id, object, model, choices, usage]
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          const: chat.completion
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatChoice'
+        usage:
+          $ref: '#/components/schemas/TokenUsage'
+
+    ChatChoice:
+      type: object
+      required: [index, message, finish_reason]
+      properties:
+        index:
+          type: integer
+        message:
+          $ref: '#/components/schemas/ChatMessage'
+        finish_reason:
+          type: [string, "null"]
+          description: Reason the model stopped; null if incomplete in edge cases.
+
+    ChatCompletionChunk:
+      type: object
+      required: [id, object, model, choices]
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          const: chat.completion.chunk
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatChunkChoice'
+
+    ChatChunkChoice:
+      type: object
+      required: [index, delta, finish_reason]
+      properties:
+        index:
+          type: integer
+        delta:
+          $ref: '#/components/schemas/ChatMessageDelta'
+        finish_reason:
+          type: [string, "null"]
+          description: Usually null until the final chunk.
+
+    ChatMessageDelta:
+      type: object
+      description: Partial message fields; content may grow across chunks.
+      properties:
+        role:
+          type: string
+        content:
+          type: string
+
+    TokenUsage:
+      type: object
+      required: [prompt_tokens, completion_tokens, total_tokens]
+      properties:
+        prompt_tokens:
+          type: integer
+        completion_tokens:
+          type: integer
+        total_tokens:
+          type: integer
+
+    ModelListResponse:
+      type: object
+      required: [object, data]
+      properties:
+        object:
+          type: string
+          const: list
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelInfo'
+
+    ModelInfo:
+      type: object
+      required: [id, object, owned_by, permission]
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          const: model
+        owned_by:
+          type: string
+        permission:
+          type: array
+          items: {}
+          description: OpenAI-compatible permission list (often empty for gateways).
+
+    HealthResponse:
+      type: object
+      required: [status, version, initialized]
+      properties:
+        status:
+          type: string
+          example: ok
+        version:
+          type: string
+          example: 0.1.0
+        initialized:
+          type: boolean
+          description: Whether the gateway finished startup initialization.
+
+    CacheStatsResponse:
+      type: object
+      required:
+        - hit_count
+        - miss_count
+        - put_count
+        - entry_count
+        - hit_rate
+        - current_threshold
+      properties:
+        hit_count:
+          type: integer
+          minimum: 0
+        miss_count:
+          type: integer
+          minimum: 0
+        put_count:
+          type: integer
+          minimum: 0
+        entry_count:
+          type: integer
+          minimum: 0
+        hit_rate:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        current_threshold:
+          type: number
+          format: double
+          description: Active similarity threshold for cache hits (gateway-defined semantics).
+
+    AdminReloadResponse:
+      type: object
+      required: [status, message]
+      properties:
+        status:
+          type: string
+          enum: [reloaded, error]
+        message:
+          type: string
+
+    CacheImportEntry:
+      type: object
+      required: [prompt, response, model]
+      properties:
+        prompt:
+          type: string
+        response:
+          type: string
+        model:
+          type: string
+
+    CacheImportRequest:
+      type: array
+      items:
+        $ref: '#/components/schemas/CacheImportEntry'
+
+    CacheImportResponse:
+      type: object
+      required: [imported]
+      properties:
+        imported:
+          type: integer
+          minimum: 0
+
+    AuditLogEvent:
+      type: object
+      description: |
+        Shape is illustrative; the gateway may add fields. Consumers should tolerate unknown keys.
+      properties:
+        ts:
+          type: string
+          format: date-time
+        level:
+          type: string
+        event:
+          type: string
+        route:
+          type: string
+      additionalProperties: true
+
+    EmbeddingsRequest:
+      type: object
+      required: [model, input]
+      properties:
+        model:
+          type: string
+          description: Embedding model id.
+          example: text-embedding-3-small
+        input:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: Input text to embed (string or array of strings).
+        encoding_format:
+          type: string
+          enum: [float, base64]
+          default: float
+        dimensions:
+          type: integer
+          description: Number of dimensions for the output embeddings.
+
+    EmbeddingsResponse:
+      type: object
+      required: [object, data, model, usage]
+      properties:
+        object:
+          type: string
+          const: list
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              object:
+                type: string
+                const: embedding
+              embedding:
+                type: array
+                items:
+                  type: number
+              index:
+                type: integer
+        model:
+          type: string
+        usage:
+          type: object
+          properties:
+            prompt_tokens:
+              type: integer
+            total_tokens:
+              type: integer
+
+    ImageGenerationRequest:
+      type: object
+      required: [prompt]
+      properties:
+        model:
+          type: string
+          example: dall-e-3
+        prompt:
+          type: string
+          description: Text description of the desired image(s).
+        n:
+          type: integer
+          default: 1
+        size:
+          type: string
+          enum: ["256x256", "512x512", "1024x1024", "1024x1792", "1792x1024"]
+          default: "1024x1024"
+        quality:
+          type: string
+          enum: [standard, hd]
+          default: standard
+        response_format:
+          type: string
+          enum: [url, b64_json]
+          default: url
+
+    ImageGenerationResponse:
+      type: object
+      required: [created, data]
+      properties:
+        created:
+          type: integer
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+              b64_json:
+                type: string
+              revised_prompt:
+                type: string
+
+    AudioTranscriptionRequest:
+      type: object
+      required: [file, model]
+      properties:
+        file:
+          type: string
+          format: binary
+          description: Audio file to transcribe.
+        model:
+          type: string
+          example: whisper-1
+        language:
+          type: string
+          description: ISO-639-1 language code.
+        prompt:
+          type: string
+        response_format:
+          type: string
+          enum: [json, text, srt, verbose_json, vtt]
+          default: json
+        temperature:
+          type: number
+
+    AudioTranslationRequest:
+      type: object
+      required: [file, model]
+      properties:
+        file:
+          type: string
+          format: binary
+          description: Audio file to translate.
+        model:
+          type: string
+          example: whisper-1
+        prompt:
+          type: string
+        response_format:
+          type: string
+          enum: [json, text, srt, verbose_json, vtt]
+          default: json
+        temperature:
+          type: number
+
+    AudioTranscriptionResponse:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+
+    AudioSpeechRequest:
+      type: object
+      required: [model, input, voice]
+      properties:
+        model:
+          type: string
+          example: tts-1
+        input:
+          type: string
+          description: Text to generate audio for (max 4096 characters).
+        voice:
+          type: string
+          enum: [alloy, echo, fable, onyx, nova, shimmer]
+        response_format:
+          type: string
+          enum: [mp3, opus, aac, flac, wav, pcm]
+          default: mp3
+        speed:
+          type: number
+          minimum: 0.25
+          maximum: 4.0
+          default: 1.0
+
+    ErrorDetail:
+      type: object
+      required: [code, type, message, doc_url]
+      properties:
+        code:
+          type: string
+          description: Stable AEGIS error code.
+          pattern: ^AEGIS-[0-9]{4}$
+          example: AEGIS-1001
+        type:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          type: string
+          example: Invalid or missing API key
+        doc_url:
+          type: string
+          format: uri
+          example: https://aegisgate.dev/docs/errors#AEGIS-1001
+
+    ErrorType:
+      type: string
+      enum:
+        - authentication_error
+        - rate_limit_error
+        - security_error
+        - routing_error
+        - validation_error
+        - system_error
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+
+  responses:
+    ErrorResponse:
+      description: AegisGate error envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidKey:
+              value:
+                error:
+                  code: AEGIS-1001
+                  type: authentication_error
+                  message: Invalid or missing API key
+                  doc_url: https://aegisgate.dev/docs/errors#AEGIS-1001
+
+    AuthenticationError:
+      description: Invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidKey:
+              value:
+                error:
+                  code: AEGIS-1001
+                  type: authentication_error
+                  message: Invalid or missing API key
+                  doc_url: https://aegisgate.dev/docs/errors#AEGIS-1001
+
+    AdminAuthenticationError:
+      description: Invalid or missing admin API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidAdmin:
+              value:
+                error:
+                  code: AEGIS-1003
+                  type: authentication_error
+                  message: Invalid or missing admin API key
+                  doc_url: https://aegisgate.dev/docs/errors#AEGIS-1003
+
+    RateLimitError:
+      description: Rate limit or quota exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            rateLimit:
+              value:
+                error:
+                  code: AEGIS-2001
+                  type: rate_limit_error
+                  message: Rate limit exceeded
+                  doc_url: https://aegisgate.dev/docs/errors#AEGIS-2001
+
+    SecurityError:
+      description: Request blocked by security or guardrail policy
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            injection:
+              value:
+                error:
+                  code: AEGIS-3001
+                  type: security_error
+                  message: 'Request blocked: injection attack detected'
+                  doc_url: https://aegisgate.dev/docs/errors#AEGIS-3001
+
+    UnsupportedEndpointError:
+      description: Endpoint not supported by the target provider
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unsupported:
+              value:
+                error:
+                  code: AEGIS-4006
+                  type: routing_error
+                  message: Endpoint not supported by the target provider
+                  doc_url: https://aegisgate.dev/docs/errors#AEGIS-4006
+
+    RoutingUpstreamError:
+      description: Upstream model or routing failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            upstream:
+              value:
+                error:
+                  code: AEGIS-4004
+                  type: routing_error
+                  message: All upstream models failed
+                  doc_url: https://aegisgate.dev/docs/errors#AEGIS-4004
+
+    ValidationError:
+      description: Invalid request payload or parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            badJson:
+              value:
+                error:
+                  code: AEGIS-5001
+                  type: validation_error
+                  message: Invalid request body
+                  doc_url: https://aegisgate.dev/docs/errors#AEGIS-5001
+
+    PayloadTooLarge:
+      description: Request body exceeds configured limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            tooLarge:
+              value:
+                error:
+                  code: AEGIS-5002
+                  type: validation_error
+                  message: Request body exceeds maximum allowed size
+                  doc_url: https://aegisgate.dev/docs/errors#AEGIS-5002
+
+    SystemError:
+      description: Internal or gateway readiness error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internal:
+              value:
+                error:
+                  code: AEGIS-9002
+                  type: system_error
+                  message: Internal server error
+                  doc_url: https://aegisgate.dev/docs/errors#AEGIS-9002
+
+    UpstreamTimeout:
+      description: Upstream request timed out
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            timeout:
+              value:
+                error:
+                  code: AEGIS-4003
+                  type: routing_error
+                  message: Upstream model request timed out
+                  doc_url: https://aegisgate.dev/docs/errors#AEGIS-4003

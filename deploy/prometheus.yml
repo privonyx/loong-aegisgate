@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "aegisgate"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["aegisgate-1:8080", "aegisgate-2:8080"]

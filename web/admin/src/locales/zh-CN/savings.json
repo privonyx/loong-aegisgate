@@ -1,0 +1,102 @@
+{
+  "title": "省钱能力概览",
+  "toast": {
+    "loadFailed": "加载失败"
+  },
+  "error": {
+    "title": "无法加载节省数据"
+  },
+  "windows": {
+    "24h": "近 24 小时",
+    "7d": "近 7 天",
+    "30d": "近 30 天",
+    "all": "全部"
+  },
+  "algoButton": {
+    "title": "查看节省金额计算方法",
+    "label": "算法说明"
+  },
+  "aggregator": {
+    "since": "数据起始于 ",
+    "window": "（进程内聚合，重启即重置）。当前窗口：",
+    "separator": " ~ ",
+    "end": "。"
+  },
+  "algo": {
+    "title": "节省金额计算方法",
+    "cacheHit": {
+      "term": "缓存命中节省",
+      "body1": "：当语义缓存命中时，AegisGate 跳过上游 LLM 调用。节省金额 = 估算的 input + output tokens × 该模型每千 token 单价。 其中 input tokens 取自请求实际值（PromptCompressor 设置）；output tokens 通过",
+      "body2": " 估算 cached_response。"
+    },
+    "compression": {
+      "term": "Prompt 压缩节省",
+      "body": "：input 段被 PromptCompressor 压缩后，原长 - 压缩后长度即为节省 tokens；金额按目标模型单价计算（仅 input 段）。"
+    },
+    "routing": {
+      "term": "智能路由（潜在）",
+      "body": "：CostOptimizer 推荐切换到更便宜的模型 时报告的潜在节省。当前未真实发生（属于建议），单独标记为 routing_potential 以避免 夸大已实现节省。"
+    },
+    "fallback": {
+      "lead": "本周期内有 ",
+      "mid": " 次事件因模型 pricing 缺失采用了降级估算（cost = 0），但 token 数仍真实计入。请配置",
+      "tail": " 完善单价表。"
+    }
+  },
+  "kpi": {
+    "costSaved": "已节省金额",
+    "costActual": "实际支出",
+    "cacheHits": "缓存命中次数"
+  },
+  "sourceSplit": {
+    "title": "节省来源拆分",
+    "empty": "当前窗口暂无节省事件"
+  },
+  "trend": {
+    "title": "节省金额时间趋势",
+    "empty": "当前窗口暂无趋势数据",
+    "lineName": "节省金额"
+  },
+  "modelCompare": {
+    "title": "按模型节省金额对比",
+    "empty": "当前窗口暂无模型节省事件",
+    "barName": "节省 ($)"
+  },
+  "routing": {
+    "title": "智能路由建议（潜在节省）",
+    "empty": "CostOptimizer 暂无可执行的切换建议",
+    "route": "路由",
+    "potential": "潜在节省",
+    "events": "事件数"
+  },
+  "modality": {
+    "title": "按模态归因（预览）",
+    "hint": "基于模型名启发式分类（embedding / image / whisper / tts / moderation / chat）。 后续将接入",
+    "hintTail": "维度的精确数据（Epic 5.1c）。",
+    "empty": "当前窗口暂无可归因事件",
+    "modality": "模态",
+    "costSaved": "节省金额",
+    "tokensSaved": "节省 tokens",
+    "requests": "请求数"
+  },
+  "topTenants": {
+    "title": "Top {{count}} 节省最多租户（仅 SuperAdmin 可见）",
+    "tenantId": "租户 ID",
+    "costSaved": "节省金额",
+    "tokensSaved": "节省 tokens",
+    "events": "事件数"
+  },
+  "typeLabels": {
+    "cache_hit": "语义缓存命中",
+    "compression": "Prompt 压缩",
+    "routing_potential": "智能路由（潜在）"
+  },
+  "modalityLabels": {
+    "embedding": "向量嵌入 (Embedding)",
+    "image_gen": "图像生成 (Image)",
+    "audio_transcribe": "语音转写 (Whisper)",
+    "audio_speech": "语音合成 (TTS)",
+    "moderation": "安全审核 (Moderation)",
+    "chat": "对话 (Chat / Completion)"
+  }
+}

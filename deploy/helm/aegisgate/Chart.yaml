@@ -1,0 +1,13 @@
+apiVersion: v2
+name: aegisgate
+description: AegisGate - High-performance AI Gateway Proxy
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - ai-gateway
+  - llm-proxy
+  - api-gateway
+home: https://github.com/privonyx/loong-aegisgate
+maintainers:
+  - name: Loong Superbank

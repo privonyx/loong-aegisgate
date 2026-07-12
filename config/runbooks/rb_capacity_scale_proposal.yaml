@@ -1,0 +1,25 @@
+# Phase 11.4 self-healing ops — Runbook 5/5.
+#
+# 场景：CapacityPredictor 预测 30min 后 QPS 持续高位 → 生成 HPA 提案，
+# advisory 模式让运维 kubectl scale。v1 不直接调 K8s API（YAGNI）。
+
+id: "rb_capacity_scale_proposal"
+description: "QPS 持续高位 → HPA replica 提案"
+triggers:
+  - kind: "rca_required"
+    rca_rule_id: "rca_qps_growth"
+    rca_min_score: 0.6
+actions:
+  - action: "propose_hpa_scale"
+    payload:
+      target_replicas: 6
+      current_replicas: 3
+      suggested_kubectl_command: "kubectl scale deployment/aegisgate --replicas=6"
+      rationale: "30min predicted QPS > target, +20% safety margin"
+      estimated_cost_increase_usd_24h: 3.0
+rollback_actions:
+  - action: "audit_only"
+    payload:
+      note: "scale-down decision belongs to capacity team after stable window"
+approval_required: true
+cooldown_seconds: 1800

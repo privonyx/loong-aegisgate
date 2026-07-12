@@ -1,0 +1,65 @@
+{
+  "actions": {
+    "export": "Export",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "close": "Close",
+    "search": "Search",
+    "refresh": "Refresh",
+    "submit": "Submit",
+    "back": "Back",
+    "retry": "Retry",
+    "copy": "Copy",
+    "view": "View"
+  },
+  "status": {
+    "loading": "Loading…",
+    "empty": "No data",
+    "error": "Something went wrong",
+    "success": "Success",
+    "active": "Active",
+    "inactive": "Inactive",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "table": {
+    "noData": "No data",
+    "total": "{{count}} total",
+    "page": "Page {{page}}",
+    "rowsPerPage": "Rows per page",
+    "actions": "Actions"
+  },
+  "roleGuard": {
+    "denied": "You don't have permission to access this page (a higher-privilege role is required)."
+  },
+  "export": {
+    "started": "Export started downloading",
+    "failed": "Export failed",
+    "fromDate": "Start date",
+    "toDate": "End date",
+    "format": "Format",
+    "formatLabel": "Export format",
+    "hint": "Leave dates empty to export the backend default range. Only SuperAdmin can export across tenants."
+  },
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "none": "None",
+    "unknown": "Unknown"
+  },
+  "layout": {
+    "brand": "AegisGate",
+    "adminPanel": "Admin Panel",
+    "collapse": "Collapse",
+    "toggleLight": "Switch to light",
+    "toggleDark": "Switch to dark",
+    "accountSecurity": "Account Security (MFA)",
+    "logout": "Log out",
+    "language": "Language"
+  }
+}

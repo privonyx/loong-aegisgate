@@ -1,0 +1,61 @@
+{
+  "title": "护栏诊断",
+  "description": "查询护栏决策解释并标注反馈，或提交护栏模型晋升提案。",
+  "search": {
+    "label": "请求 ID",
+    "placeholder": "输入 request_id 查询护栏决策解释",
+    "button": "查询"
+  },
+  "states": {
+    "initial": "输入 request_id 查询该请求的护栏决策解释。",
+    "empty": "该请求暂无护栏解释记录（解释为运行时内存态，可能已过期）。",
+    "notWired": "Adaptive Guard 未启用，护栏诊断功能当前不可用。"
+  },
+  "explanation": {
+    "cardTitle": "护栏决策解释",
+    "triggerSection": "触发来源",
+    "decisionSection": "判定数值",
+    "matchSection": "匹配与解释",
+    "triggerLayer": "触发层",
+    "triggerRuleId": "规则 ID",
+    "modelVersion": "模型版本",
+    "confidence": "置信度",
+    "threshold": "阈值",
+    "matchedPattern": "匹配模式",
+    "explanationText": "解释",
+    "empty": "—"
+  },
+  "feedback": {
+    "title": "反馈标注",
+    "groupError": "护栏判定错误",
+    "groupConfirm": "确认护栏正确",
+    "labels": {
+      "false_positive": "误拦（过度拦截）",
+      "false_negative": "漏拦（最危险）",
+      "confirmed_block": "确认拦截正确",
+      "confirmed_allow": "确认放行正确"
+    },
+    "commentPlaceholder": "可选：补充说明（提交时将做 PII 脱敏）",
+    "submit": "提交反馈",
+    "success": "反馈已提交",
+    "errors": {
+      "rateLimited": "操作过于频繁，请稍后再试。",
+      "anomalyBlocked": "反馈被异常检测拦截，未计入训练语料。"
+    }
+  },
+  "promote": {
+    "title": "模型晋升",
+    "action": "操作",
+    "actionDefault": "promote",
+    "modelId": "模型 ID",
+    "version": "版本",
+    "submit": "提交晋升提案",
+    "confirmTitle": "确认提交模型晋升提案？",
+    "confirmMessage": "此操作将创建一条自治审批提案，需在 FinOps 审批页批准后方可生效。",
+    "confirmLabel": "确认提交",
+    "success": "晋升提案已创建，请前往 FinOps 审批页处理。",
+    "gotoFinops": "前往 FinOps 审批",
+    "notEnabled": "Adaptive Guard 未启用，无法提交晋升提案。",
+    "missingFields": "请填写操作、模型 ID 与版本。"
+  }
+}

@@ -1,0 +1,25 @@
+# Phase 11.4 self-healing ops — Runbook 3/5.
+#
+# 场景：上游 provider 5xx 激增（双信号 metric + RCA）→ 提案切换到备用
+# provider；advisory 模式（v1 不直接改 ConnectorRegistry）。
+
+id: "rb_upstream_provider_failover"
+description: "上游 provider 故障 → 切换备用 provider 提案"
+triggers:
+  - kind: "rca_required"
+    rca_rule_id: "rca_high_p99_with_upstream_5xx"
+    rca_min_score: 0.7
+actions:
+  - action: "switch_connector"
+    payload:
+      from_provider: "openai"
+      to_provider: "anthropic"
+      until_ms: 600000
+      reason: "upstream 5xx burst"
+rollback_actions:
+  - action: "switch_connector"
+    payload:
+      from_provider: "anthropic"
+      to_provider: "openai"
+approval_required: true
+cooldown_seconds: 600

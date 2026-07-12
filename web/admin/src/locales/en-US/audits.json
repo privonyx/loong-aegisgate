@@ -1,0 +1,21 @@
+{
+  "title": "Audit Logs",
+  "toast": {
+    "loadFailed": "Failed to load"
+  },
+  "filter": {
+    "tenant": "Filter by tenant ID"
+  },
+  "columns": {
+    "timestamp": "Time",
+    "requestId": "Request ID",
+    "tenant": "Tenant",
+    "stage": "Stage",
+    "detail": "Detail"
+  },
+  "mode": {
+    "live": "Live Mode",
+    "history": "History Mode"
+  },
+  "exportDialogTitle": "Export Audit Logs"
+}

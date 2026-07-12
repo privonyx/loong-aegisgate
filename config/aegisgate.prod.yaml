@@ -1,0 +1,293 @@
+# =============================================================================
+# AegisGate 生产环境配置 (prod profile)
+#
+# 配套 scripts/build.sh 生产档位(-t Release)构建的「全能力版」二进制：Redis 共享缓存 +
+# PostgreSQL 持久化 + OpenTelemetry 分布式追踪 + Guard 安全模型 全部启用。
+#
+# 重要：编译档位只决定「能力是否编入」，真正启用哪个后端由本文件决定。
+#       默认 storage.strict_backends=true；若后端服务未就绪，启动会 fail-closed 拒绝运行。
+#       仅显式设置 strict_backends:false 时才允许降级到 memory/sqlite（不建议生产使用）。
+#       先用 scripts/setup-prod-deps.sh 把 Redis/PostgreSQL/OTel Collector 拉起来。
+#
+# 敏感值（网关 key / 管理台 JWT / PG 连接串 / Redis 口令）一律用 ${ENV} 占位，
+# 运行前在 shell 里 export，切勿写死进版本控制的文件：
+#   export AEGISGATE_API_KEY="..."
+#   export AEGISGATE_ADMIN_JWT_SECRET="$(openssl rand -hex 32)"
+#   export POSTGRES_URL="postgres://aegisgate:口令@127.0.0.1:5432/aegisgate"
+#   export REDIS_PASSWORD="..."          # 无口令则删掉 storage.redis.password 一行
+#   export DEEPSEEK_API_KEY="sk-..."     # 供应商 key 在 models.yaml 引用
+# =============================================================================
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  threads: 0                  # 0 = 按 CPU 核数自动
+  request_timeout_seconds: 120
+
+edition: community
+license_file: ""
+
+models_config: "config/models.yaml"
+
+auth:
+  enabled: true               # 生产必须开启鉴权
+  api_keys:
+    - "${AEGISGATE_API_KEY}"
+
+rbac:
+  enabled: false
+
+tls:
+  # 生产建议在网关前置 Nginx/LB 终止 TLS；如需网关直接收 HTTPS 则置 true 并填证书。
+  enabled: false
+  port: 0
+  cert_path: ""
+  key_path: ""
+
+audit:
+  log_path: "logs/audit.log"
+  retention_days: 90          # 生产保留 90 天审计;0 = 永不裁剪(不建议)
+
+rate_limit:
+  max_tokens: 10000.0
+  refill_rate: 100.0
+
+circuit_breaker:
+  failure_threshold: 3
+  reset_timeout_seconds: 30
+  half_open_max_calls: 1
+  max_circuits: 512
+  circuit_idle_ttl_seconds: 0
+
+limits:
+  max_request_body_size: 65536
+  max_connections: 10000
+
+features:
+  guardrail:
+    custom_rules: false
+  management:
+    mode: cli
+  deployment:
+    mode: standalone
+
+# --- 存储后端：生产形态 = Redis 缓存 + PostgreSQL 持久化 -----------------------
+storage:
+  cache_backend: redis        # ← 生产：共享缓存(需 -DENABLE_REDIS=ON,已编入)
+  persistent_backend: postgres # ← 生产：持久化(需 -DENABLE_PG=ON,已编入)
+
+  sqlite:                     # persistent_backend=postgres 时不生效,保留兜底
+    path: "data/aegisgate.db"
+    wal_mode: true
+
+  redis:
+    host: "127.0.0.1"
+    port: 6379
+    password: "${REDIS_PASSWORD}"  # 无口令时删除本行
+    db: 0
+    pool_size: 8
+    connect_timeout_ms: 3000
+    command_timeout_ms: 1000
+
+  postgres:
+    url: "${POSTGRES_URL}"    # postgres://用户:口令@主机:5432/库
+    pool_size: 8
+    connect_timeout_ms: 5000
+
+embedding:
+  model_path: "models/bge-small-zh-v1.5.onnx"
+  vocab_path: "models/vocab.txt"
+
+vector_store:
+  backend: hnswlib            # 单机进程内向量检索;多实例可换 milvus/qdrant
+
+cache:
+  threshold: 0.95
+  ttl_seconds: 3600
+  max_entries: 10000
+  max_partitions: 64
+  context_aware: true
+  warmup_file: ""
+  conversation_hash:
+    mode: full
+    window_size: 4
+  conversation_cache:
+    enabled: false
+    summarizer:
+      type: rule_based
+      onnx_model_path: ""
+      max_summary_ms: 200
+      max_input_tokens: 4096
+    id_resolver:
+      enabled: true
+  adaptive_threshold:
+    enabled: false
+    min_threshold: 0.85
+    max_threshold: 0.98
+    adjustment_rate: 0.01
+    window_size: 100
+  policy:
+    enabled: true
+    skip_models: []
+    max_temperature: 1.0
+    skip_streaming: false
+
+security:
+  unicode_normalization: true
+  encoding_detection: true
+  encoding_min_base64_length: 20
+
+  # --- 安全护栏模型：生产启用(需 -DENABLE_GUARD_MODEL=ON + 已下载 guard 模型) ---
+  guard_model:
+    enabled: true             # ← 生产：开启 prompt 注入检测
+    model_path: "models/guard/deberta-v3-base-prompt-injection-v2.onnx"
+    spm_model_path: "models/guard/deberta-v3-base-prompt-injection-v2.spm.model"
+    vocab_path: "models/vocab.txt"
+    threshold: 0.5
+    fail_policy: open         # open=模型故障放行(可用性优先) | closed=故障即拦截
+
+  external_safety:
+    enabled: false            # 如需云端审核(OpenAI/Perspective)再开
+    mode: any
+    fail_policy: open
+    parallel: true
+    shadow_mode: false
+    shadow_max_inflight: 1000
+    shadow_audit_ttl_seconds: 86400
+    openai_moderation:
+      enabled: false
+      api_key: "${OPENAI_API_KEY}"
+      base_url: "https://api.openai.com"
+      model: "omni-moderation-latest"
+      timeout_ms: 5000
+    perspective:
+      enabled: false
+      api_key: "${PERSPECTIVE_API_KEY}"
+      base_url: "https://commentanalyzer.googleapis.com"
+      threshold: 0.7
+      attributes:
+        - TOXICITY
+        - SEVERE_TOXICITY
+        - IDENTITY_ATTACK
+        - INSULT
+        - PROFANITY
+        - THREAT
+      timeout_ms: 5000
+
+  abuse_detection:
+    enabled: true
+    window_seconds: 300
+    warn_threshold: 5
+    throttle_threshold: 10
+    block_threshold: 20
+    block_duration_seconds: 1800
+    throttle_factor: 0.5
+    max_keys_per_shard: 1024
+    similarity_enabled: true
+    similarity_hamming_threshold: 3
+    similarity_max_fingerprints: 32
+    similarity_max_content_bytes: 8192
+
+# --- 分布式追踪：生产启用(需 -DENABLE_OPENTELEMETRY=ON,已编入) ----------------
+telemetry:
+  enabled: true               # ← 生产：开启 OTLP 追踪
+  otlp_endpoint: "http://127.0.0.1:4318"  # OTel Collector / Tempo 的 OTLP HTTP 端点
+  service_name: "aegisgate"
+  sample_ratio: 0.1           # 生产建议采样 10%,高流量可再调低
+
+admin:
+  jwt_secret: "${AEGISGATE_ADMIN_JWT_SECRET}"  # Web 管理台必填,经 env 注入
+  jwt_expire_seconds: 28800
+  # 生产改为你实际访问管理台的源(协议+域名+端口);留 localhost 仅适合本机调试
+  cors_origins: ["http://localhost:8080"]
+  static_dir: "web/admin/dist"
+  # 建议限制管理台来源 IP(留空=放行所有)
+  # allowed_ips: ["127.0.0.1", "10.0.0.0/8"]
+
+plugins:
+  enabled: false
+  search_path: "config/plugins"
+
+# standalone=单实例;多实例横向扩展用 cluster(依赖上面的 Redis 作共享状态)
+deployment:
+  mode: standalone
+
+routing:
+  type: cost_aware
+  ml:
+    cost_weight: 0.4
+    quality_weight: 0.35
+    latency_weight: 0.25
+
+autonomy:
+  enabled: false
+  auto_apply_mode: manual_only
+  proposal_retention_days: 90
+  feedback_bus:
+    enabled: false
+    max_queue_size: 10000
+    drop_policy: oldest
+  cost_optimizer:
+    enabled: false
+
+budget_guard:
+  enabled: false
+  per_tenant_24h_usd: 100.0
+  per_request_max_usd: 1.0
+  fail_open_on_error: true
+  downgrade_tier: economy
+  downgrade_header_name: X-AegisGate-Budget-Guard
+  downgrade_header_value: triggered
+
+multimodal:
+  enabled: false
+  policy: cheapest
+  cost_attribution:
+    enabled: true
+  rate_limit:
+    enabled: false
+
+token_optimization:
+  prompt_compression:
+    enabled: true
+    max_context_messages: 20
+    compress_whitespace: true
+    dedup_system_prompts: true
+  smart_max_tokens:
+    enabled: true
+    default_max_output: 2048
+    max_output_ratio: 2.0
+    min_output_tokens: 100
+
+agent:
+  enabled: false
+  max_steps: 10
+  max_total_timeout_ms: 120000
+  tool_default_timeout_ms: 30000
+  tool_max_output_bytes: 1048576
+
+rag:
+  enabled: false
+  top_k: 3
+  min_relevance: 0.7
+  max_context_tokens: 2000
+  chunk_size: 512
+  chunk_overlap: 64
+  injection_position: "before_user"
+
+observability:
+  cost_attribution:
+    enabled: false
+  anomaly_detection:
+    enabled: false
+    z_score_threshold: 3.0
+    window_size: 100
+  quality_monitoring:
+    enabled: false
+    alert_threshold: 0.3
+  cost_optimization:
+    enabled: false
+
+logging:
+  level: info                 # 生产用 info;排障临时调 debug
+  file: "logs/aegisgate.log"

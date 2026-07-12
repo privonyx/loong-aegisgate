@@ -1,0 +1,36 @@
+{
+  "title": "Tenant Management",
+  "new": "New Tenant",
+  "edit": "Edit Tenant",
+  "table": {
+    "name": "Name",
+    "status": "Status",
+    "modelWhitelist": "Model Whitelist",
+    "dailyLimit": "Daily Limit",
+    "rateLimit": "Rate Limit",
+    "createdAt": "Created At",
+    "unlimited": "Unlimited"
+  },
+  "delete": {
+    "title": "Delete Tenant",
+    "message": "Are you sure you want to delete tenant \"{{name}}\"? This action cannot be undone."
+  },
+  "toast": {
+    "loadFailed": "Failed to load",
+    "deleted": "Tenant deleted",
+    "deleteFailed": "Failed to delete",
+    "updated": "Tenant updated",
+    "created": "Tenant created",
+    "saveFailed": "Failed to save"
+  },
+  "form": {
+    "name": "Name *",
+    "status": "Status",
+    "modelWhitelist": "Model Whitelist (comma separated)",
+    "dailyCostLimit": "Daily Cost Limit (-1 = unlimited)",
+    "monthlyCostLimit": "Monthly Cost Limit",
+    "rateLimitTokens": "Rate Limit (tokens)",
+    "rateLimitRefill": "Rate Refill",
+    "create": "Create"
+  }
+}

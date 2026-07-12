@@ -1,0 +1,198 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Default build path (TASK-20260614-01): ENABLE_ONNX + ENABLE_GUARD_MODEL
+          # are now default-ON. onnxruntime resolves from the vendored
+          # third_party/ package (git-tracked), so ENABLE_ONNX stays ON. No
+          # guard-spm feature here, so SentencePiece is absent → ENABLE_GUARD_MODEL
+          # gracefully downgrades to OFF (verifies the graceful-fallback path).
+          - build_type: Release
+            sanitizer: ""
+            cmake_extra: ""
+            label: release
+          - build_type: Debug
+            sanitizer: "-DENABLE_ASAN=ON -DENABLE_UBSAN=ON"
+            cmake_extra: ""
+            label: debug-asan
+          - build_type: Debug
+            sanitizer: ""
+            cmake_extra: "-DENABLE_COVERAGE=ON"
+            label: coverage
+          # Full guard ON: install SentencePiece via guard-spm feature so
+          # ENABLE_GUARD_MODEL compiles the real ONNX guard path (not downgraded).
+          - build_type: Release
+            sanitizer: ""
+            cmake_extra: "-DENABLE_CURL=ON -DVCPKG_MANIFEST_FEATURES=guard-spm"
+            label: release-all-features
+          # Explicit OFF: verify the pass-through stub compile path still builds
+          # when the user opts out of ONNX features entirely.
+          - build_type: Release
+            sanitizer: ""
+            cmake_extra: "-DENABLE_ONNX=OFF -DENABLE_GUARD_MODEL=OFF"
+            label: release-onnx-off
+          - build_type: Release
+            sanitizer: ""
+            cmake_extra: "-DENABLE_OPENTELEMETRY=ON -DVCPKG_MANIFEST_FEATURES=otel"
+            label: release-otel
+
+    name: ${{ matrix.label }}
+
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-linux
+      # Disable lukka/run-vcpkg@v11's default GHA binary-cache integration.
+      # The default "clear;x-gha,readwrite" requires ACTIONS_RUNTIME_TOKEN /
+      # ACTIONS_CACHE_URL env vars which are NOT available without the
+      # official actions/github-script exporter. We fall back to the
+      # built-in actions/cache around build/vcpkg_installed below.
+      VCPKG_BINARY_SOURCES: "clear"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ ninja-build pkg-config libssl-dev libcurl4-openssl-dev
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: '01f602195983451bc83e72f4214af2cbc495aa94'
+
+      - name: Cache vcpkg installed packages
+        uses: actions/cache@v4
+        with:
+          path: build/vcpkg_installed
+          key: vcpkg-${{ runner.os }}-${{ matrix.label }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-${{ matrix.label }}-
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DBUILD_TESTS=ON \
+            -DBUILD_BENCHMARKS=OFF \
+            ${{ matrix.sanitizer }} \
+            ${{ matrix.cmake_extra }}
+
+      - name: Build
+        run: cmake --build build -j$(nproc)
+
+      - name: Run clang-tidy (informational)
+        if: matrix.label == 'release'
+        continue-on-error: true
+        run: |
+          sudo apt-get install -y clang-tidy
+          cd build && run-clang-tidy -p . ../src/ 2>&1 | head -100
+
+      - name: Run tests
+        run: cd build && ctest --output-on-failure -j$(nproc)
+        timeout-minutes: 10
+
+      - name: Coverage summary
+        if: matrix.label == 'coverage'
+        run: |
+          sudo apt-get install -y gcovr
+          cd build && gcovr -r .. --print-summary \
+            --gcov-ignore-parse-errors=negative_hits.warn_once_per_file \
+            --exclude '../build/.*' \
+            --exclude '../vcpkg_installed/.*' \
+            --filter '../src/' \
+            --filter '../include/'
+
+      - name: Validate docker-compose config
+        if: matrix.label == 'release'
+        run: |
+          docker compose config -q
+          test -f deploy/prometheus.yml
+          test -f deploy/grafana/provisioning/datasources/prometheus.yml
+          test -f deploy/grafana/dashboards/aegisgate-overview.json
+
+  build-and-test-pg:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    name: release-pg
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: aegisgate
+          POSTGRES_PASSWORD: aegisgate_test
+          POSTGRES_DB: aegisgate_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aegisgate"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-linux
+      AEGISGATE_PG_URL: "postgresql://aegisgate:aegisgate_test@localhost:5432/aegisgate_test"
+      # See upstream comment in build-and-test job for rationale.
+      VCPKG_BINARY_SOURCES: "clear"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ ninja-build pkg-config libssl-dev libpq-dev libcurl4-openssl-dev
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: '01f602195983451bc83e72f4214af2cbc495aa94'
+
+      - name: Cache vcpkg installed packages
+        uses: actions/cache@v4
+        with:
+          path: build/vcpkg_installed
+          key: vcpkg-${{ runner.os }}-release-pg-${{ hashFiles('vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-release-pg-
+
+      - name: Configure CMake
+        # ENABLE_CONTROL_PLANE=ON + ENABLE_PG=ON gives the only build path
+        # that compiles the rollout proto AND PgPersistentStore's rollout
+        # methods. AEGISGATE_PG_URL is exported above, so the typed test
+        # PgFactory and PgRolloutIntegrationTest run instead of GTEST_SKIP
+        # (TASK-20260507-01 Epic 4.1).
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTS=ON \
+            -DBUILD_BENCHMARKS=OFF \
+            -DENABLE_PG=ON \
+            -DENABLE_CONTROL_PLANE=ON \
+            -DVCPKG_MANIFEST_FEATURES="control-plane" \
+            -DENABLE_CURL=ON
+
+      - name: Build
+        run: cmake --build build -j$(nproc)
+
+      - name: Run tests
+        run: cd build && ctest --output-on-failure -j$(nproc)
+        timeout-minutes: 10

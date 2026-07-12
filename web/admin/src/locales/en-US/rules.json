@@ -1,0 +1,38 @@
+{
+  "title": "Guardrail Rule Sets",
+  "newVersion": "New Version",
+  "activate": "Activate",
+  "col": {
+    "version": "Version",
+    "status": "Status",
+    "rulesCount": "Rules",
+    "createdAt": "Created At"
+  },
+  "status": {
+    "active": "Active",
+    "history": "Historical"
+  },
+  "viewVersion": "View version {{version}}",
+  "activateVersion": "Activate version {{version}}",
+  "activateDialog": {
+    "title": "Activate Rule Version",
+    "message": "Activate version {{version}}? The current active version will be replaced."
+  },
+  "viewer": {
+    "title": "Version {{version}} Rules"
+  },
+  "form": {
+    "title": "New Rule Version",
+    "rulesLabel": "Rules JSON (array)",
+    "rulesAria": "Rules JSON",
+    "invalidJson": "Invalid JSON format. Please check and try again.",
+    "submit": "Create Version"
+  },
+  "toast": {
+    "loadFailed": "Failed to load",
+    "activated": "Version {{version}} activated",
+    "activateFailed": "Activation failed",
+    "created": "New version created and activated",
+    "saveFailed": "Failed to save"
+  }
+}

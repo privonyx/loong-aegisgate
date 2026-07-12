@@ -1,0 +1,39 @@
+{
+  "title": "API Key Management",
+  "filterPlaceholder": "Filter by tenant ID",
+  "createKey": "Create Key",
+  "create": "Create",
+  "col": {
+    "name": "Name",
+    "prefix": "Prefix",
+    "tenant": "Tenant",
+    "role": "Role",
+    "status": "Status",
+    "createdAt": "Created At"
+  },
+  "action": {
+    "rotate": "Rotate",
+    "revoke": "Revoke"
+  },
+  "revokeTitle": "Revoke API Key",
+  "revokeConfirm": "Are you sure you want to revoke \"{{name}}\"? It cannot be recovered after revocation.",
+  "rotateTitle": "Rotate API Key",
+  "rotateConfirm": "Are you sure you want to rotate \"{{name}}\"? The old key will be revoked and a new key generated.",
+  "createTitle": "Create API Key",
+  "revealTitle": "API Key Created",
+  "revealHint": "Please copy and save this key immediately. You won't be able to view it again after closing.",
+  "saved": "I've Saved It",
+  "form": {
+    "userId": "User ID *",
+    "name": "Name",
+    "role": "Role"
+  },
+  "toast": {
+    "loadFailed": "Failed to load",
+    "revoked": "API Key revoked",
+    "revokeFailed": "Failed to revoke",
+    "rotated": "API Key rotated",
+    "rotateFailed": "Failed to rotate",
+    "createFailed": "Failed to create"
+  }
+}

@@ -1,0 +1,88 @@
+name: Seed User Feedback
+description: Used AegisGate? Tell us — share your savings story or pain points
+title: "[Seed Feedback] <Your scenario in one line>"
+labels: ["seed-user", "feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying AegisGate! This 6-field form takes ~5 minutes and helps us prioritize the roadmap.
+
+        Your responses are public. If you want to share something privately, ping us on [Discord](https://discord.gg/aegisgate) instead.
+
+        See also: [`aegisctl estimate`](https://github.com/privonyx/loong-aegisgate/blob/main/docs/estimate.md) (pre-flight savings projection) · [Adopters list](https://github.com/privonyx/loong-aegisgate/blob/main/ADOPTERS.md)
+
+  - type: textarea
+    id: scenario
+    attributes:
+      label: Scenario
+      description: What are you using AegisGate for? (e.g., customer-support chat, internal copilot, document Q&A, agent framework)
+      placeholder: "Customer support chat for Acme — answers product questions using GPT-4o + a vector store of our docs"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: monthly_calls
+    attributes:
+      label: Monthly call volume
+      description: Roughly how many LLM calls per month go through AegisGate?
+      options:
+        - "< 1,000 (early prototype)"
+        - "1k - 10k (small production)"
+        - "10k - 100k (medium production)"
+        - "100k - 1M (large production)"
+        - "> 1M (high-scale production)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_savings_pct
+    attributes:
+      label: Actual savings observed
+      description: |
+        After running AegisGate for a meaningful period, what savings did you actually see? Compare with the `aegisctl estimate` projection if you ran it before installing.
+
+        Format ideas: "35% cache hit rate → 32% cost reduction" or "$1,200/mo → $780/mo (35% saved)" or "Haven't measured yet — running for X days".
+      placeholder: "Cache hit rate stabilized at 28% after 2 weeks. Combined with routing 20% to gpt-4o-mini, we cut OpenAI bill from ~$1,500/mo to ~$950/mo (~37% saved)."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: Install method
+      description: How are you running AegisGate?
+      options:
+        - "Docker (5-min quickstart)"
+        - "Built from source (cmake)"
+        - "Helm chart (Kubernetes)"
+        - "pip install aegisgate (Python SDK only)"
+        - "npm install @aegisgate/sdk (Node.js SDK only)"
+        - "Other (please describe in pain points)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: pain_points
+    attributes:
+      label: Pain points / things that surprised you
+      description: |
+        What was harder than it should have been? What was missing? Anything that surprised you (good or bad)?
+
+        Examples: "config YAML is hard to read", "couldn't find docs for X", "expected feature Y but it's enterprise-only", "performance was better than expected on Z".
+      placeholder: "Config YAML schema isn't documented anywhere — I had to read the source. Once I figured it out, the rest was smooth."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: case_study_consent
+    attributes:
+      label: Case study consent
+      description: |
+        We may want to use your feedback (with explicit per-quote consent) in MVP-5 case study blog posts and link your organization in [`ADOPTERS.md`](https://github.com/privonyx/loong-aegisgate/blob/main/ADOPTERS.md).
+
+        Check the boxes for what you're comfortable with. None are required.
+      options:
+        - label: I'm OK being quoted (with per-quote review) in a case study blog post
+        - label: I'm OK being listed in ADOPTERS.md once I open a PR
+        - label: I'd like a maintainer to schedule a 15-min call to walk through the feedback

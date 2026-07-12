@@ -1,0 +1,131 @@
+name: Publish SDK
+
+# TASK-20260525-02 MVP-3 — Python (PyPI) + Node.js (npm) SDK publish.
+#
+# SR1: 不含 token 字面量；所有凭证经 secrets 引用 / OIDC 短时凭证。
+# SR2: PyPI 用 Trusted Publishing OIDC（id-token: write），无 long-lived token。
+# SR3: 仅在 push tags 'sdk-v*.*.*' 时触发 — 与 docker `v*` tag 解耦；
+#      不接受 workflow_dispatch / pull_request / push.branches。
+# SR4: manifest 校验 hard-code 关键文本（plan / test / impl 共享同一字符串）：
+#       - twine check          → "PASSED"
+#       - npm pack --dry-run   → "package size:" / "unpacked size:"
+#       - pip install local    → "Successfully installed aegisgate-0.1.0"
+#       - import aegisgate     → "0.1.0"
+
+on:
+  push:
+    tags:
+      - 'sdk-v*.*.*'
+
+# 顶层只读 — publish 任务用 job-level permission 提权。
+permissions:
+  contents: read
+
+jobs:
+
+  publish-python:
+    name: Publish Python SDK to PyPI (Trusted Publisher OIDC)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: pypi
+      url: https://pypi.org/project/aegisgate/
+    permissions:
+      # SR2: OIDC short-lived credentials for PyPI Trusted Publishing.
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build + twine
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+
+      - name: Verify version tag matches package metadata
+        run: |
+          TAG="${GITHUB_REF#refs/tags/sdk-v}"
+          PKG_VERSION=$(grep -E '^version = "[^"]+"' sdk/python/pyproject.toml \
+                        | sed -E 's/version = "([^"]+)"/\1/')
+          echo "tag=$TAG pyproject=$PKG_VERSION"
+          if [ "$TAG" != "$PKG_VERSION" ]; then
+            echo "::error::Tag sdk-v$TAG does not match pyproject version $PKG_VERSION"
+            exit 1
+          fi
+
+      - name: Build sdist + wheel
+        working-directory: sdk/python
+        run: python -m build
+
+      - name: SR4 twine check — must contain "PASSED"
+        working-directory: sdk/python
+        run: |
+          set -o pipefail
+          python -m twine check dist/* | tee /tmp/twine-check.log
+          # SR4 hard-code 字面量（与 tests/scripts/test-sdk-publish.sh 一致）
+          grep -F "PASSED" /tmp/twine-check.log
+
+      - name: Publish to PyPI (Trusted Publishing OIDC)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: sdk/python/dist/
+          # No `password:` field — OIDC short-lived token is provided automatically
+          # via id-token: write permission above.
+
+  publish-nodejs:
+    name: Publish Node.js SDK to npm
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/@aegisgate/sdk
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Verify version tag matches package metadata
+        run: |
+          TAG="${GITHUB_REF#refs/tags/sdk-v}"
+          PKG_VERSION=$(node -p "require('./sdk/nodejs/package.json').version")
+          echo "tag=$TAG package.json=$PKG_VERSION"
+          if [ "$TAG" != "$PKG_VERSION" ]; then
+            echo "::error::Tag sdk-v$TAG does not match package.json version $PKG_VERSION"
+            exit 1
+          fi
+
+      - name: Install deps + build
+        working-directory: sdk/nodejs
+        run: |
+          npm ci
+          npm run build
+
+      - name: SR4 npm pack dry-run — must contain "package size:" and "unpacked size:"
+        working-directory: sdk/nodejs
+        run: |
+          set -o pipefail
+          npm pack --dry-run 2>&1 | tee /tmp/npm-pack.log
+          # SR4 hard-code 字面量（与 tests/scripts/test-sdk-publish.sh 一致）
+          grep -F "package size:" /tmp/npm-pack.log
+          grep -F "unpacked size:" /tmp/npm-pack.log
+
+      - name: Publish to npm
+        working-directory: sdk/nodejs
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+        run: npm publish --access public

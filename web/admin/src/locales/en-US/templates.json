@@ -1,0 +1,40 @@
+{
+  "title": "Prompt Template Management",
+  "newTemplate": "New Template",
+  "col": {
+    "name": "Name",
+    "version": "Version",
+    "weight": "Weight",
+    "status": "Status",
+    "contentPreview": "Content Preview",
+    "createdAt": "Created At"
+  },
+  "status": {
+    "active": "Enabled",
+    "inactive": "Disabled"
+  },
+  "deleteDialog": {
+    "title": "Delete Template",
+    "message": "Delete template \"{{name}}\"? This action cannot be undone."
+  },
+  "form": {
+    "createTitle": "New Template",
+    "editTitle": "Edit Template",
+    "nameLabel": "Name *",
+    "nameAria": "Name",
+    "contentLabel": "Content *",
+    "contentAria": "Content",
+    "weightLabel": "Weight",
+    "weightAria": "Weight",
+    "activeLabel": "Enabled",
+    "submitCreate": "Create"
+  },
+  "toast": {
+    "loadFailed": "Failed to load",
+    "deleted": "Template deleted",
+    "deleteFailed": "Failed to delete",
+    "updated": "Template updated",
+    "created": "Template created",
+    "saveFailed": "Failed to save"
+  }
+}

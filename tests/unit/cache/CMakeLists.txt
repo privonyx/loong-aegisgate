@@ -1,0 +1,67 @@
+add_executable(test_embedder test_embedder.cpp)
+target_link_libraries(test_embedder PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME EmbedderTest COMMAND test_embedder)
+
+add_executable(test_tokenizer test_tokenizer.cpp)
+target_link_libraries(test_tokenizer PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME TokenizerTest COMMAND test_tokenizer)
+
+add_executable(test_vector_index test_vector_index.cpp)
+target_link_libraries(test_vector_index PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME VectorIndexTest COMMAND test_vector_index)
+
+add_executable(test_partitioned_vector_index test_partitioned_vector_index.cpp)
+target_link_libraries(test_partitioned_vector_index PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME PartitionedVectorIndexTest COMMAND test_partitioned_vector_index)
+
+add_executable(test_vector_store test_vector_store.cpp)
+target_link_libraries(test_vector_store PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME VectorStoreTest COMMAND test_vector_store)
+
+add_executable(test_vector_store_config test_vector_store_config.cpp)
+target_link_libraries(test_vector_store_config PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME VectorStoreConfigTest COMMAND test_vector_store_config)
+
+add_executable(test_semantic_cache test_semantic_cache.cpp)
+target_link_libraries(test_semantic_cache PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME SemanticCacheTest COMMAND test_semantic_cache)
+
+add_executable(test_semantic_cache_hit_types test_semantic_cache_hit_types.cpp)
+target_link_libraries(test_semantic_cache_hit_types PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME SemanticCacheHitTypeTest COMMAND test_semantic_cache_hit_types)
+
+add_executable(test_cache_feedback test_cache_feedback.cpp)
+target_link_libraries(test_cache_feedback PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CacheFeedbackTest COMMAND test_cache_feedback)
+
+add_executable(test_conversation_id_resolver test_conversation_id_resolver.cpp)
+target_link_libraries(test_conversation_id_resolver PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConversationIdResolverTest COMMAND test_conversation_id_resolver)
+
+add_executable(test_rule_based_summarizer test_rule_based_summarizer.cpp)
+target_link_libraries(test_rule_based_summarizer PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RuleBasedSummarizerTest COMMAND test_rule_based_summarizer)
+
+add_executable(test_onnx_summarizer test_onnx_summarizer.cpp)
+target_link_libraries(test_onnx_summarizer PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME OnnxSummarizerTest COMMAND test_onnx_summarizer)
+
+add_executable(test_composite_summarizer test_composite_summarizer.cpp)
+target_link_libraries(test_composite_summarizer PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CompositeSummarizerTest COMMAND test_composite_summarizer)
+
+add_executable(test_summarizer_factory test_summarizer_factory.cpp)
+target_link_libraries(test_summarizer_factory PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME SummarizerFactoryTest COMMAND test_summarizer_factory)
+
+add_executable(test_semantic_cache_v2 test_semantic_cache_v2.cpp)
+target_link_libraries(test_semantic_cache_v2 PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME SemanticCacheV2Test COMMAND test_semantic_cache_v2)
+
+add_executable(test_conversation_cache_evictor test_conversation_cache_evictor.cpp)
+target_link_libraries(test_conversation_cache_evictor PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConversationCacheEvictorTest COMMAND test_conversation_cache_evictor)
+
+add_executable(test_cache_migrator test_cache_migrator.cpp)
+target_link_libraries(test_cache_migrator PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CacheMigratorTest COMMAND test_cache_migrator)

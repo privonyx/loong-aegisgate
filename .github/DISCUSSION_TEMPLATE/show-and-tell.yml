@@ -1,0 +1,32 @@
+title: "[Show & Tell] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share something you've built with AegisGate! Showcase your deployment, integration, custom plugin, security rule, or any creative use case.
+
+  - type: textarea
+    id: showcase
+    attributes:
+      label: What did you build?
+      description: Describe your project, deployment, or use case.
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Technical Details
+      description: |
+        Share relevant technical details — architecture, configuration, performance numbers, lessons learned, etc.
+    validations:
+      required: false
+
+  - type: textarea
+    id: links
+    attributes:
+      label: Links & Resources
+      description: Links to repositories, blog posts, demos, screenshots, etc.
+    validations:
+      required: false

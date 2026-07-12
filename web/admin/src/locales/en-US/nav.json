@@ -1,0 +1,23 @@
+{
+  "groups": {
+    "overview": "Overview",
+    "access": "Tenants & Access",
+    "finance": "Cost & Finance",
+    "governance": "Policy & Governance"
+  },
+  "items": {
+    "dashboard": "Dashboard",
+    "tenants": "Tenants",
+    "users": "Users",
+    "keys": "API Keys",
+    "sso": "SSO Config",
+    "costs": "Costs",
+    "savings": "Savings",
+    "forecast": "Forecast",
+    "finops": "FinOps Approvals",
+    "rules": "Guardrail Rules",
+    "guard": "Guard Diagnostics",
+    "templates": "Templates",
+    "audits": "Audits"
+  }
+}

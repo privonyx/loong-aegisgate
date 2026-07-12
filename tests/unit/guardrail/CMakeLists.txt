@@ -1,0 +1,151 @@
+add_executable(test_injection test_injection.cpp)
+target_link_libraries(test_injection PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME InjectionTest COMMAND test_injection WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_pii_filter test_pii_filter.cpp)
+target_link_libraries(test_pii_filter PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME PIIFilterTest COMMAND test_pii_filter)
+
+add_executable(test_topic_guard test_topic_guard.cpp)
+target_link_libraries(test_topic_guard PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME TopicGuardTest COMMAND test_topic_guard WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_unicode_normalizer test_unicode_normalizer.cpp)
+target_link_libraries(test_unicode_normalizer PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME UnicodeNormalizerTest COMMAND test_unicode_normalizer)
+
+add_executable(test_content_filter test_content_filter.cpp)
+target_link_libraries(test_content_filter PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ContentFilterTest COMMAND test_content_filter)
+
+add_executable(test_hallucination test_hallucination.cpp)
+target_link_libraries(test_hallucination PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME HallucinationTest COMMAND test_hallucination)
+
+add_executable(test_audit test_audit.cpp)
+target_link_libraries(test_audit PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AuditTest COMMAND test_audit)
+
+add_executable(test_rule_engine test_rule_engine.cpp)
+target_link_libraries(test_rule_engine PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RuleEngineTest COMMAND test_rule_engine)
+
+add_executable(test_multilang_injection test_multilang_injection.cpp)
+target_link_libraries(test_multilang_injection PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME MultilangInjectionTest COMMAND test_multilang_injection WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_encoding_detector test_encoding_detector.cpp)
+target_link_libraries(test_encoding_detector PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME EncodingDetectorTest COMMAND test_encoding_detector)
+
+# TASK-20260707-03 / REV20260707-N19 — vision image_url/data URI scan surface
+add_executable(test_image_ref_scan test_image_ref_scan.cpp)
+target_link_libraries(test_image_ref_scan PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ImageRefScanTest COMMAND test_image_ref_scan WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+# TASK-20260708-03 / REV20260707-C2 — Adaptive Guard explanation wiring
+add_executable(test_guard_explanation_wiring test_guard_explanation_wiring.cpp)
+target_link_libraries(test_guard_explanation_wiring PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardExplanationWiringTest COMMAND test_guard_explanation_wiring
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_input_preprocessor test_input_preprocessor.cpp)
+target_link_libraries(test_input_preprocessor PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME InputPreprocessorTest COMMAND test_input_preprocessor WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_prompt_template_stage test_prompt_template_stage.cpp)
+target_link_libraries(test_prompt_template_stage PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME PromptTemplateStageTest COMMAND test_prompt_template_stage)
+
+add_executable(test_guardrail_integration test_guardrail_integration.cpp)
+target_link_libraries(test_guardrail_integration PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardrailIntegrationTest COMMAND test_guardrail_integration WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_rule_hot_reload test_rule_hot_reload.cpp)
+target_link_libraries(test_rule_hot_reload PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RuleHotReloadTest COMMAND test_rule_hot_reload WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_guard_classifier test_guard_classifier.cpp)
+target_link_libraries(test_guard_classifier PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardClassifierTest COMMAND test_guard_classifier)
+
+if(ENABLE_GUARD_MODEL)
+    add_executable(test_spm_tokenizer test_spm_tokenizer.cpp)
+    target_link_libraries(test_spm_tokenizer PRIVATE aegisgate_core GTest::gtest_main)
+    add_test(NAME SpmTokenizerTest COMMAND test_spm_tokenizer)
+endif()
+
+# Header-only decision helper (softmax + thresholding); no core/ONNX link needed.
+add_executable(test_guard_decision test_guard_decision.cpp)
+target_include_directories(test_guard_decision PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(test_guard_decision PRIVATE GTest::gtest_main)
+add_test(NAME GuardDecisionTest COMMAND test_guard_decision)
+
+add_executable(test_openai_moderation test_openai_moderation.cpp)
+target_link_libraries(test_openai_moderation PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME OpenAIModerationTest COMMAND test_openai_moderation)
+
+add_executable(test_perspective_api test_perspective_api.cpp)
+target_link_libraries(test_perspective_api PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME PerspectiveApiTest COMMAND test_perspective_api)
+
+add_executable(test_external_safety_stage test_external_safety_stage.cpp)
+target_link_libraries(test_external_safety_stage PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ExternalSafetyStageTest COMMAND test_external_safety_stage)
+
+add_executable(test_external_safety_shadow test_external_safety_shadow.cpp)
+target_link_libraries(test_external_safety_shadow PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ExternalSafetyShadowTest COMMAND test_external_safety_shadow)
+
+# Phase 11.1 TASK-20260523-01 — Adaptive Guard (L5)
+add_executable(test_guard_explanation test_guard_explanation.cpp)
+target_link_libraries(test_guard_explanation PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardExplanationTest COMMAND test_guard_explanation)
+
+add_executable(test_guard_model_registry test_guard_model_registry.cpp)
+target_link_libraries(test_guard_model_registry PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardModelRegistryTest COMMAND test_guard_model_registry)
+
+add_executable(test_sqlite_guard_model_registry test_sqlite_guard_model_registry.cpp)
+target_link_libraries(test_sqlite_guard_model_registry PRIVATE aegisgate_core GTest::gtest_main unofficial::sqlite3::sqlite3)
+add_test(NAME SQLiteGuardModelRegistryTest COMMAND test_sqlite_guard_model_registry)
+
+add_executable(test_guard_feedback_payload test_guard_feedback_payload.cpp)
+target_link_libraries(test_guard_feedback_payload PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardFeedbackPayloadTest COMMAND test_guard_feedback_payload)
+
+add_executable(test_guard_feedback_sink test_guard_feedback_sink.cpp)
+target_link_libraries(test_guard_feedback_sink PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardFeedbackSinkTest COMMAND test_guard_feedback_sink WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_guard_feedback_rate_limiter test_guard_feedback_rate_limiter.cpp)
+target_link_libraries(test_guard_feedback_rate_limiter PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardFeedbackRateLimiterTest COMMAND test_guard_feedback_rate_limiter)
+
+add_executable(test_guard_feedback_anomaly_detector test_guard_feedback_anomaly_detector.cpp)
+target_link_libraries(test_guard_feedback_anomaly_detector PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardFeedbackAnomalyDetectorTest COMMAND test_guard_feedback_anomaly_detector)
+
+add_executable(test_guard_explanation_builder test_guard_explanation_builder.cpp)
+target_link_libraries(test_guard_explanation_builder PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardExplanationBuilderTest COMMAND test_guard_explanation_builder)
+
+add_executable(test_guard_trainer test_guard_trainer.cpp)
+target_link_libraries(test_guard_trainer PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardTrainerTest COMMAND test_guard_trainer)
+
+add_executable(test_guard_model_applier test_guard_model_applier.cpp)
+target_link_libraries(test_guard_model_applier PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardModelApplierTest COMMAND test_guard_model_applier)
+
+add_executable(test_guard_applier_workflow_integration test_guard_applier_workflow_integration.cpp)
+target_link_libraries(test_guard_applier_workflow_integration PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardApplierWorkflowIntegrationTest COMMAND test_guard_applier_workflow_integration)
+
+add_executable(test_guard_admin_controller test_guard_admin_controller.cpp)
+target_link_libraries(test_guard_admin_controller PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GuardAdminControllerTest COMMAND test_guard_admin_controller WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_guard_e2e_lifecycle test_guard_e2e_lifecycle.cpp)
+target_link_libraries(test_guard_e2e_lifecycle PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AdaptiveGuardLifecycleTest COMMAND test_guard_e2e_lifecycle WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

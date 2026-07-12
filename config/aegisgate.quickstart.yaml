@@ -1,0 +1,28 @@
+# AegisGate quickstart config — DEVELOPMENT/DEMO ONLY
+# 30 lines vs config/aegisgate.yaml's 508 lines.
+# See docs/quickstart.md for the 5-minute tutorial.
+server:
+  host: "0.0.0.0"
+  port: 8080
+edition: community
+models_config: "config/models.yaml"
+auth:
+  enabled: true
+  api_keys:
+    - "${AEGISGATE_QUICKSTART_API_KEY}"
+storage:
+  cache_backend: memory
+  persistent_backend: sqlite
+  sqlite:
+    path: "data/aegisgate.db"
+    wal_mode: true
+features:
+  guardrail:
+    custom_rules: false
+  management:
+    mode: cli
+  deployment:
+    mode: standalone
+admin:
+  enabled: true
+  http_enabled: true

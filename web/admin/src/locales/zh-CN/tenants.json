@@ -1,0 +1,36 @@
+{
+  "title": "租户管理",
+  "new": "新建租户",
+  "edit": "编辑租户",
+  "table": {
+    "name": "名称",
+    "status": "状态",
+    "modelWhitelist": "模型白名单",
+    "dailyLimit": "日限额",
+    "rateLimit": "速率限制",
+    "createdAt": "创建时间",
+    "unlimited": "无限制"
+  },
+  "delete": {
+    "title": "删除租户",
+    "message": "确定要删除租户 \"{{name}}\" 吗？此操作不可撤销。"
+  },
+  "toast": {
+    "loadFailed": "加载失败",
+    "deleted": "租户已删除",
+    "deleteFailed": "删除失败",
+    "updated": "租户已更新",
+    "created": "租户已创建",
+    "saveFailed": "保存失败"
+  },
+  "form": {
+    "name": "名称 *",
+    "status": "状态",
+    "modelWhitelist": "模型白名单 (逗号分隔)",
+    "dailyCostLimit": "日成本限额 (-1=无限制)",
+    "monthlyCostLimit": "月成本限额",
+    "rateLimitTokens": "速率限制 (tokens)",
+    "rateLimitRefill": "速率恢复",
+    "create": "创建"
+  }
+}

@@ -1,0 +1,108 @@
+add_executable(test_connector_base test_connector_base.cpp)
+target_link_libraries(test_connector_base PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConnectorBaseTest COMMAND test_connector_base)
+
+add_executable(test_connector_openai test_connector_openai.cpp)
+target_link_libraries(test_connector_openai PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConnectorOpenAITest COMMAND test_connector_openai)
+
+add_executable(test_router test_router.cpp)
+target_link_libraries(test_router PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RouterTest COMMAND test_router)
+
+add_executable(test_ab_test_router test_ab_test_router.cpp)
+target_link_libraries(test_ab_test_router PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ABTestRouterTest COMMAND test_ab_test_router)
+
+add_executable(test_geo_router test_geo_router.cpp)
+target_link_libraries(test_geo_router PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME GeoRouterTest COMMAND test_geo_router)
+
+add_executable(test_provider_manifest test_provider_manifest.cpp)
+target_link_libraries(test_provider_manifest PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ProviderManifestTest COMMAND test_provider_manifest)
+
+add_executable(test_ml_router test_ml_router.cpp)
+target_link_libraries(test_ml_router PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME MLRouterTest COMMAND test_ml_router)
+
+add_executable(test_multi_objective_router test_multi_objective_router.cpp)
+target_link_libraries(test_multi_objective_router PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME MultiObjectiveRouterTest COMMAND test_multi_objective_router)
+
+add_executable(test_routing_strategy_catalog test_routing_strategy_catalog.cpp)
+target_link_libraries(test_routing_strategy_catalog PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RoutingStrategyCatalogTest COMMAND test_routing_strategy_catalog)
+
+add_executable(test_bandit_router test_bandit_router.cpp)
+target_link_libraries(test_bandit_router PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME BanditRouterTest COMMAND test_bandit_router)
+
+add_executable(test_balancer test_balancer.cpp)
+target_link_libraries(test_balancer PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME BalancerTest COMMAND test_balancer)
+
+add_executable(test_fallback test_fallback.cpp)
+target_link_libraries(test_fallback PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME FallbackTest COMMAND test_fallback)
+
+add_executable(test_circuit_breaker test_circuit_breaker.cpp)
+target_link_libraries(test_circuit_breaker PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CircuitBreakerTest COMMAND test_circuit_breaker)
+
+add_executable(test_rate_limiter test_rate_limiter.cpp)
+target_link_libraries(test_rate_limiter PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RateLimiterTest COMMAND test_rate_limiter)
+
+add_executable(test_connector_factory test_connector_factory.cpp)
+target_link_libraries(test_connector_factory PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConnectorFactoryTest COMMAND test_connector_factory)
+
+add_executable(test_fallback_stream test_fallback_stream.cpp)
+target_link_libraries(test_fallback_stream PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME FallbackStreamTest COMMAND test_fallback_stream)
+
+add_executable(test_connector_claude test_connector_claude.cpp)
+target_link_libraries(test_connector_claude PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConnectorClaudeTest COMMAND test_connector_claude)
+
+add_executable(test_upstream_client test_upstream_client.cpp)
+target_link_libraries(test_upstream_client PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME UpstreamClientTest COMMAND test_upstream_client)
+
+add_executable(test_abuse_detector test_abuse_detector.cpp)
+target_link_libraries(test_abuse_detector PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AbuseDetectorTest COMMAND test_abuse_detector)
+
+add_executable(test_simhash test_simhash.cpp)
+target_link_libraries(test_simhash PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME SimHashTest COMMAND test_simhash)
+
+add_executable(test_curl_upstream_client test_curl_upstream_client.cpp)
+target_link_libraries(test_curl_upstream_client PRIVATE aegisgate_core GTest::gtest_main)
+if(ENABLE_CURL)
+    target_link_libraries(test_curl_upstream_client PRIVATE CURL::libcurl)
+endif()
+add_test(NAME CurlUpstreamClientTest COMMAND test_curl_upstream_client)
+
+add_executable(test_prompt_compressor test_prompt_compressor.cpp)
+target_link_libraries(test_prompt_compressor PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME PromptCompressorTest COMMAND test_prompt_compressor)
+
+add_executable(test_smart_max_tokens test_smart_max_tokens.cpp)
+target_link_libraries(test_smart_max_tokens PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME SmartMaxTokensTest COMMAND test_smart_max_tokens)
+
+add_executable(test_proxy_endpoints test_proxy_endpoints.cpp)
+target_link_libraries(test_proxy_endpoints PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ProxyEndpointsTest COMMAND test_proxy_endpoints)
+
+# REV20260707-I14 (D2 Option A) Layer 1 predicate test.
+add_executable(test_stream_retry_predicate test_stream_retry_predicate.cpp)
+target_link_libraries(test_stream_retry_predicate PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME StreamRetryPredicateTest COMMAND test_stream_retry_predicate)
+
+# REV20260707-I14 (D2 Option A) Layer 2 integration test.
+add_executable(test_connector_stream_retry test_connector_stream_retry.cpp)
+target_link_libraries(test_connector_stream_retry PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ConnectorStreamRetryTest COMMAND test_connector_stream_retry)

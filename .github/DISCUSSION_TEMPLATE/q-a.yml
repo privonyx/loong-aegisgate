@@ -1,0 +1,37 @@
+title: "[Q&A] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask a question about AegisGate — configuration, deployment, integration, troubleshooting, or anything else.
+
+        Before asking, please check:
+        - [Documentation](https://github.com/privonyx/loong-aegisgate/tree/main/docs/guides)
+        - [Existing discussions](https://github.com/privonyx/loong-aegisgate/discussions/categories/q-a)
+        - [Troubleshooting guide](https://github.com/privonyx/loong-aegisgate/blob/main/docs/guides/troubleshooting.md)
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like to know?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: |
+        Provide any relevant context — your setup, configuration, what you've tried, error messages, etc.
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: AegisGate Version
+      placeholder: "v0.2.0 / main branch / commit hash"
+    validations:
+      required: false

@@ -1,0 +1,54 @@
+{
+  "name": "@aegisgate/sdk",
+  "version": "0.1.0",
+  "description": "Node.js/TypeScript SDK for AegisGate AI Gateway",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "default": "./dist/testing.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "aegisgate",
+    "ai",
+    "gateway",
+    "openai",
+    "llm"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/privonyx/loong-aegisgate.git",
+    "directory": "sdk/nodejs"
+  },
+  "homepage": "https://github.com/privonyx/loong-aegisgate#readme",
+  "bugs": {
+    "url": "https://github.com/privonyx/loong-aegisgate/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  }
+}

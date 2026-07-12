@@ -1,0 +1,124 @@
+# AegisGate 企业版配置示例
+# 复制此文件为 aegisgate.yaml 并根据需要修改
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  threads: 0  # 0 = auto (CPU cores)
+
+# 企业版需要有效 License 文件
+edition: enterprise
+license_file: "/etc/aegisgate/license.json"
+# License 文件格式:
+# {
+#   "edition": "enterprise",
+#   "customer": "Your Company",
+#   "expires": "2027-12-31",
+#   "features": ["rbac", "web_management", "custom_rules", "alerting",
+#                 "sso", "compliance_report", "advanced_routing", "cluster_deployment"],
+#   "license_key": "AEGIS-ENT-..."
+# }
+#
+# 可用 features:
+#   rbac              - 角色权限控制 + 多租户
+#   web_management    - Web 管理面板（依赖 rbac）
+#   sso               - OIDC/OAuth2 单点登录（依赖 rbac）
+#   custom_rules      - 自定义安全规则引擎
+#   alerting          - 高级告警（Webhook/钉钉/飞书）
+#   compliance_report - 合规报告导出
+#   advanced_routing  - ML 辅助智能路由
+#   cluster_deployment - 多节点集群部署
+
+models_config: "config/models.yaml"
+
+auth:
+  enabled: true
+  api_keys:
+    - "${AEGISGATE_API_KEY}"
+
+rbac:
+  enabled: true
+  default_tenant:
+    name: "Default Tenant"
+    model_whitelist: []
+    daily_cost_limit: -1
+    monthly_cost_limit: -1
+
+tls:
+  enabled: true
+  cert_path: "/etc/aegisgate/tls/cert.pem"
+  key_path: "/etc/aegisgate/tls/key.pem"
+
+audit:
+  log_path: "logs/audit.log"
+
+rate_limit:
+  max_tokens: 100000.0
+  refill_rate: 1000.0
+
+circuit_breaker:
+  failure_threshold: 3
+  reset_timeout_seconds: 30
+  half_open_max_calls: 1
+  max_circuits: 512
+  circuit_idle_ttl_seconds: 0
+
+limits:
+  max_request_body_size: 131072
+  max_connections: 50000
+
+features:
+  guardrail:
+    custom_rules: true
+  management:
+    mode: web  # cli | web (企业版)
+  deployment:
+    mode: standalone  # standalone | cluster (企业版)
+
+embedding:
+  model_path: "models/bge-small-zh-v1.5.onnx"
+  vocab_path: "models/vocab.txt"
+
+# 向量存储后端：hnswlib（默认进程内）/ milvus / qdrant（外部可扩展）
+vector_store:
+  backend: hnswlib  # hnswlib | milvus | qdrant
+  # milvus:                    # 需 -DENABLE_MILVUS=ON 编译
+  #   host: "milvus.internal"
+  #   port: 19530
+  #   collection_prefix: "aegisgate_cache"
+  #   metric_type: "IP"
+  #   token: "${MILVUS_TOKEN}"
+  # qdrant:                    # 需 -DENABLE_QDRANT=ON 编译
+  #   host: "qdrant.internal"
+  #   port: 6333
+  #   collection_prefix: "aegisgate_cache"
+  #   distance: "Cosine"
+  #   api_key: "${QDRANT_API_KEY}"
+
+admin:
+  jwt_secret: ""            # REQUIRED. Set via AEGISGATE_ADMIN_JWT_SECRET env var
+  jwt_expire_seconds: 28800
+  cors_origins: []
+  static_dir: "web/admin/dist"
+  allowed_ips: ["127.0.0.1"]  # Restrict admin panel to loopback only; add internal IPs as needed
+
+logging:
+  level: info
+  file: "logs/aegisgate.log"
+
+# Sample alerting rules/channels (loader already wires these via Config::alertRules /
+# alertChannels → pipeline_assembler). Replace metric names with live registry names.
+alerting:
+  rules:
+    - id: high_error_rate
+      metric: gateway_error_rate
+      threshold: 0.05
+      severity: warning
+      enabled: true
+      cooldown_seconds: 300
+      description: "Sample rule — replace metric with a real registry name"
+  channels:
+    - name: sample_webhook
+      type: webhook
+      url: "https://example.com/hooks/aegisgate"
+      secret: ""

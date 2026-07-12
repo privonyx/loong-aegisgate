@@ -1,0 +1,26 @@
+# Phase 11.4 self-healing ops — Runbook 1/5.
+#
+# 场景：网关内部高 P99 延迟 → 通过 RCA 二次确认（SR7 双信号），降级
+# tenant 的 quality_tier 至 economy。配审批以避免误降影响业务。
+
+id: "rb_high_latency_quality_downgrade"
+description: "P99 高延迟（RCA 验证）→ tenant quality_tier 降级"
+triggers:
+  - kind: "rca_required"
+    rca_rule_id: "rca_high_p99_internal"
+    rca_min_score: 0.7
+actions:
+  - action: "override_quality_tier"
+    payload:
+      tenant_id: "${tenant_id}"
+      to_quality_tier: "economy"
+      from_quality_tier: "standard"
+      estimated_savings_usd_24h: 5.0
+      affected_requests_per_hour: 200
+rollback_actions:
+  - action: "override_quality_tier"
+    payload:
+      tenant_id: "${tenant_id}"
+      to_quality_tier: "standard"
+approval_required: true
+cooldown_seconds: 600

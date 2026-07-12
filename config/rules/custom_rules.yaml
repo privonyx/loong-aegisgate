@@ -1,0 +1,29 @@
+version: 1
+rules:
+  - id: block-sql-injection
+    description: "Block SQL injection patterns"
+    priority: 100
+    enabled: true
+    conditions:
+      - type: regex_match
+        value: "(?i)(DROP\\s+TABLE|DELETE\\s+FROM|INSERT\\s+INTO)"
+    action: block
+
+  - id: warn-long-input
+    description: "Warn on inputs exceeding 50000 chars"
+    priority: 50
+    enabled: true
+    conditions:
+      - type: length_check
+        value: "50000"
+    action: warn
+
+  - id: redact-competitor
+    description: "Redact competitor product names"
+    priority: 80
+    enabled: true
+    conditions:
+      - type: keyword_contains
+        value: "competitor-secret"
+    action: modify
+    action_param: "[REDACTED]"

@@ -1,0 +1,8 @@
+#pragma once
+#include <string_view>
+
+namespace aegisgate {
+
+inline constexpr std::string_view kOpenApiSpec = R"(@OPENAPI_SPEC_CONTENT@)";
+
+} // namespace aegisgate

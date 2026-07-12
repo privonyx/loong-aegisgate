@@ -1,0 +1,61 @@
+{
+  "title": "Guard Diagnostics",
+  "description": "Look up guardrail decision explanations and label feedback, or submit a guard model promotion proposal.",
+  "search": {
+    "label": "Request ID",
+    "placeholder": "Enter a request_id to look up its guardrail decision explanation",
+    "button": "Look up"
+  },
+  "states": {
+    "initial": "Enter a request_id to look up the guardrail decision explanation for that request.",
+    "empty": "No guardrail explanation found for this request (explanations are held in an in-memory ring buffer and may have expired).",
+    "notWired": "Adaptive Guard is not enabled; Guard Diagnostics is currently unavailable."
+  },
+  "explanation": {
+    "cardTitle": "Guardrail Decision Explanation",
+    "triggerSection": "Trigger source",
+    "decisionSection": "Decision values",
+    "matchSection": "Match & explanation",
+    "triggerLayer": "Trigger layer",
+    "triggerRuleId": "Rule ID",
+    "modelVersion": "Model version",
+    "confidence": "Confidence",
+    "threshold": "Threshold",
+    "matchedPattern": "Matched pattern",
+    "explanationText": "Explanation",
+    "empty": "—"
+  },
+  "feedback": {
+    "title": "Label Feedback",
+    "groupError": "Guardrail decision was wrong",
+    "groupConfirm": "Confirm guardrail was correct",
+    "labels": {
+      "false_positive": "False positive (over-blocked)",
+      "false_negative": "False negative (most dangerous)",
+      "confirmed_block": "Confirmed block correct",
+      "confirmed_allow": "Confirmed allow correct"
+    },
+    "commentPlaceholder": "Optional: add a note (will be PII-masked on submit)",
+    "submit": "Submit feedback",
+    "success": "Feedback submitted",
+    "errors": {
+      "rateLimited": "Too many requests, please try again later.",
+      "anomalyBlocked": "Feedback flagged by anomaly detection and not added to the training corpus."
+    }
+  },
+  "promote": {
+    "title": "Model Promotion",
+    "action": "Action",
+    "actionDefault": "promote",
+    "modelId": "Model ID",
+    "version": "Version",
+    "submit": "Submit promotion proposal",
+    "confirmTitle": "Submit model promotion proposal?",
+    "confirmMessage": "This creates an autonomy approval proposal that must be approved on the FinOps approvals page before it takes effect.",
+    "confirmLabel": "Confirm submit",
+    "success": "Promotion proposal created; please process it on the FinOps approvals page.",
+    "gotoFinops": "Go to FinOps approvals",
+    "notEnabled": "Adaptive Guard is not enabled; cannot submit a promotion proposal.",
+    "missingFields": "Please fill in action, model ID and version."
+  }
+}

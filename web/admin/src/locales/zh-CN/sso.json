@@ -1,0 +1,34 @@
+{
+  "title": "SSO 身份提供方",
+  "newConfig": "新建 SSO 配置",
+  "editConfig": "编辑 SSO 配置",
+  "create": "创建",
+  "col": {
+    "name": "名称",
+    "secret": "密钥",
+    "status": "状态"
+  },
+  "secretConfigured": "已配置",
+  "secretMissing": "未配置",
+  "enabled": "启用",
+  "disabled": "停用",
+  "deleteTitle": "删除 SSO 配置",
+  "deleteConfirm": "确定要删除 \"{{name}}\" 吗？此操作不可撤销。",
+  "form": {
+    "name": "名称",
+    "clientSecret": "客户端密钥",
+    "secretPlaceholder": "留空 = 保持不变",
+    "scopes": "Scopes (逗号分隔)",
+    "defaultRole": "默认角色",
+    "jit": "JIT 自动开通",
+    "enabledLabel": "启用"
+  },
+  "toast": {
+    "loadFailed": "加载失败",
+    "deleted": "SSO 配置已删除",
+    "deleteFailed": "删除失败",
+    "updated": "SSO 配置已更新",
+    "created": "SSO 配置已创建",
+    "saveFailed": "保存失败"
+  }
+}

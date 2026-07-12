@@ -1,0 +1,41 @@
+# PII Detection & Masking Patterns
+# RE2-compatible regular expressions
+
+locale_zh_CN:
+  - name: "phone"
+    pattern: "1[3-9]\\d{9}"
+    replacement: "[PHONE]"
+    description: "Chinese mobile phone number"
+
+  - name: "id_card"
+    pattern: "[1-9]\\d{5}(?:19|20)\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])\\d{3}[\\dXx]"
+    replacement: "[ID_CARD]"
+    validate: "luhn"
+    description: "Chinese national ID card (18 digits)"
+
+  - name: "bank_card"
+    pattern: "(?:62|4|5[1-5])\\d{14,17}"
+    replacement: "[BANK_CARD]"
+    validate: "luhn"
+    description: "Bank card number (UnionPay/Visa/MasterCard)"
+
+locale_global:
+  - name: "email"
+    pattern: "[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}"
+    replacement: "[EMAIL]"
+    description: "Email address"
+
+  - name: "api_key"
+    pattern: "(?:sk|pk|api|key|token|secret)[_\\-]?[a-zA-Z0-9]{20,}"
+    replacement: "[API_KEY]"
+    description: "API key / secret token"
+
+  - name: "jwt"
+    pattern: "eyJ[a-zA-Z0-9_\\-]+\\.eyJ[a-zA-Z0-9_\\-]+\\.[a-zA-Z0-9_\\-]+"
+    replacement: "[JWT]"
+    description: "JSON Web Token"
+
+  - name: "ipv4"
+    pattern: "\\b(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\b"
+    replacement: "[IP_ADDR]"
+    description: "IPv4 address"

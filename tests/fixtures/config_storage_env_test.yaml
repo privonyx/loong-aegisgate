@@ -1,0 +1,15 @@
+# Minimal config for env expansion tests (storage.redis.password / storage.postgres.url)
+server:
+  host: "0.0.0.0"
+  port: 8080
+  threads: 0
+
+edition: community
+
+models_config: "config/models.yaml"
+
+storage:
+  redis:
+    password: "${REDIS_PASSWORD}"
+  postgres:
+    url: "${POSTGRES_URL}"

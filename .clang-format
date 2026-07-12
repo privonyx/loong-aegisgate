@@ -1,0 +1,15 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 100
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+PointerAlignment: Left
+AccessModifierOffset: -4
+NamespaceIndentation: None
+IncludeBlocks: Regroup
+SortIncludes: CaseSensitive
+AlignAfterOpenBracket: Align
+BinPackParameters: false
+BinPackArguments: false

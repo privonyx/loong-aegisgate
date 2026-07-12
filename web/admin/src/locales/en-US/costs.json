@@ -1,0 +1,26 @@
+{
+  "title": "Cost Analysis",
+  "toast": {
+    "loadFailed": "Failed to load"
+  },
+  "filter": {
+    "tenant": "Filter by tenant ID",
+    "model": "Filter by model"
+  },
+  "columns": {
+    "timestamp": "Time",
+    "requestId": "Request ID",
+    "tenant": "Tenant",
+    "model": "Model",
+    "cost": "Cost",
+    "inputTokens": "Input Tokens",
+    "outputTokens": "Output Tokens"
+  },
+  "chart": {
+    "modelCostDistribution": "Cost by Model",
+    "tokenUsageTrend": "Token Usage Trend",
+    "input": "Input",
+    "output": "Output"
+  },
+  "exportDialogTitle": "Export Cost Report"
+}

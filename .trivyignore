@@ -1,0 +1,18 @@
+# Trivy ignore file (.trivyignore)
+#
+# SR12 (control-plane dependency audit) blocks HIGH/CRITICAL findings.
+# This file carries temporary ignores with justification and an owner for
+# each entry. Every entry MUST be time-boxed and reviewed on each
+# quarterly security audit cycle.
+#
+# Format: one CVE per line; comments start with '#'.
+
+# --- web/admin / lodash transitive dep ------------------------------
+# CVE-2026-4800 affects lodash 4.17.23 (shipped as a transitive dep of
+# some web/admin devDependencies). The fixed version is 4.18.0. The
+# data-plane binary does not bundle lodash; the vulnerability is only
+# exploitable at npm-dev time (template compilation with untrusted
+# input). Upgrading transitively requires bumping the top-level tooling
+# (vite / eslint), tracked in a separate chore(web-admin) ticket.
+# Review by: 2026-07-31 (quarterly audit).
+CVE-2026-4800

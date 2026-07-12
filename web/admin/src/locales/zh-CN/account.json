@@ -1,0 +1,33 @@
+{
+  "title": "账户安全 · 多因素认证 (MFA)",
+  "idle": {
+    "desc": "启用基于 TOTP 的多因素认证，为账户登录增加一层保护。",
+    "enable": "启用 MFA"
+  },
+  "setup": {
+    "warning": "请立即保存以下密钥与恢复码，关闭后将不再显示。",
+    "secretLabel": "TOTP 密钥（手动录入）",
+    "uriLabel": "otpauth URI（粘贴到 Authenticator）",
+    "recoveryLabel": "恢复码（每个仅可用一次）",
+    "codeLabel": "输入 Authenticator 6 位验证码完成启用",
+    "codeAria": "验证码",
+    "verifyEnable": "验证并启用"
+  },
+  "enabled": {
+    "label": "MFA 已启用"
+  },
+  "disable": {
+    "desc": "禁用 MFA（需输入当前 Authenticator 验证码）",
+    "codeAria": "禁用验证码",
+    "button": "禁用 MFA"
+  },
+  "toast": {
+    "setupFailed": "MFA 初始化失败",
+    "enabled": "MFA 已启用",
+    "verifyInvalid": "验证码无效",
+    "disabled": "MFA 已禁用",
+    "disableFailed": "禁用失败",
+    "copied": "已复制",
+    "copyFailed": "复制失败"
+  }
+}

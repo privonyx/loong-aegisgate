@@ -1,0 +1,12 @@
+# Minimal guard model example for TASK-20260612-01.
+#
+# Copy the relevant fields into your deployment config after running:
+#   scripts/download_guard_model.sh
+
+security:
+  guard_model:
+    enabled: true
+    model_path: "models/guard/deberta-v3-base-prompt-injection-v2.onnx"
+    spm_model_path: "models/guard/deberta-v3-base-prompt-injection-v2.spm.model"
+    threshold: 0.5
+    fail_policy: open  # open | closed

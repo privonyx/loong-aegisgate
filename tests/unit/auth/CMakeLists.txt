@@ -1,0 +1,55 @@
+add_executable(test_auth_models test_auth_models.cpp)
+target_link_libraries(test_auth_models PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AuthModelsTest COMMAND test_auth_models)
+
+add_executable(test_crypto_utils test_crypto_utils.cpp)
+target_link_libraries(test_crypto_utils PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CryptoUtilsTest COMMAND test_crypto_utils)
+
+add_executable(test_auth_service test_auth_service.cpp)
+target_link_libraries(test_auth_service PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AuthServiceTest COMMAND test_auth_service WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_authorization test_authorization.cpp)
+target_link_libraries(test_authorization PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AuthorizationTest COMMAND test_authorization)
+
+add_executable(test_jwt_utils test_jwt_utils.cpp)
+target_link_libraries(test_jwt_utils PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME JwtUtilsTest COMMAND test_jwt_utils)
+
+add_executable(test_login_rate_limit test_login_rate_limit.cpp)
+target_link_libraries(test_login_rate_limit PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME LoginRateLimitTest COMMAND test_login_rate_limit)
+
+add_executable(test_encryption test_encryption.cpp)
+target_link_libraries(test_encryption PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME EncryptionTest COMMAND test_encryption)
+
+add_executable(test_session_manager test_session_manager.cpp)
+target_link_libraries(test_session_manager PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME SessionManagerTest COMMAND test_session_manager)
+
+add_executable(test_oidc_client test_oidc_client.cpp)
+target_link_libraries(test_oidc_client PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME OidcClientTest COMMAND test_oidc_client)
+
+add_executable(test_identity_mapper test_identity_mapper.cpp)
+target_link_libraries(test_identity_mapper PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME IdentityMapperTest COMMAND test_identity_mapper)
+
+add_executable(test_totp_service test_totp_service.cpp)
+target_link_libraries(test_totp_service PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME TotpServiceTest COMMAND test_totp_service)
+
+add_executable(test_scim_service test_scim_service.cpp)
+target_link_libraries(test_scim_service PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ScimServiceTest COMMAND test_scim_service)
+
+add_executable(test_prompt_template_service test_prompt_template_service.cpp)
+target_link_libraries(test_prompt_template_service PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME PromptTemplateServiceTest COMMAND test_prompt_template_service)
+
+add_executable(test_redis_session_store test_redis_session_store.cpp)
+target_link_libraries(test_redis_session_store PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RedisSessionStoreTest COMMAND test_redis_session_store)

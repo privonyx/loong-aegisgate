@@ -1,0 +1,134 @@
+# TASK-20260622-01 E4 — 生产档位冒烟 CI（创意 C1 方案 C / Layer 1）。
+#
+# 每个 PR 确定性回归「生产档位全开（Redis+PG+OTel+Guard+ControlPlane）能真实构建+
+# 链接 + 各后端运行时真实生效」。复用 E2 的 scripts/smoke-prod.sh（单一真相来源）。
+#
+# 与 G1 strict_backends=true 协同：若某后端没真生效（忘了 feature / service 没起），
+# 二进制启动期 fail-closed 非零退出 → 本 job 红。这是 Layer 1 的核心回归价值。
+#
+# Layer 2（nightly 全栈 / docker compose + guard 模型 + OTel 真 export 侧证）见
+# docs/guides/production-validation-runbook.md，不阻塞 PR。
+#
+# ⚠️ 首次运行校准（R2）：全量 prod vcpkg 冷构建可能很久；timeout 暂设 90min +
+# vcpkg 缓存。若稳定后远低于此，可下调；若仍超，按创意 §实现指导 3 降级或移 nightly。
+
+name: CI Prod Smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prod-smoke-layer1:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    name: prod-smoke (redis+pg+otel+guard+cp)
+
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: aegisgate
+          POSTGRES_PASSWORD: aegisgate_test
+          POSTGRES_DB: aegisgate_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aegisgate"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-linux
+      # 同 ci.yml：禁用 run-vcpkg 默认 GHA binary-cache，改用 actions/cache。
+      VCPKG_BINARY_SOURCES: "clear"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          # autoconf/automake/libtool/autoconf-archive/bison/flex：本 job 经
+          # VCPKG_MANIFEST_FEATURES 开了 pg feature → vcpkg 从 PostgreSQL 源码
+          # 编译 libpq，其 configure + 语法分析器(gram.y/scan.l)硬依赖 autotools
+          # + bison + flex；缺失会在 vcpkg 安装阶段 BUILD_FAILED（见 build.sh 预检）。
+          sudo apt-get install -y cmake g++ ninja-build pkg-config \
+            libssl-dev libpq-dev libcurl4-openssl-dev curl \
+            autoconf automake libtool autoconf-archive bison flex
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: '01f602195983451bc83e72f4214af2cbc495aa94'
+
+      - name: Cache vcpkg installed packages
+        uses: actions/cache@v4
+        with:
+          path: build/vcpkg_installed
+          key: vcpkg-${{ runner.os }}-prod-smoke-${{ hashFiles('vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-prod-smoke-
+
+      - name: Configure CMake (production profile, all backends ON)
+        # 生产档位全开；tee 到 configure.log 供 smoke 断言能力摘要五行 [ON ]。
+        # 先 mkdir build：管道启动时 tee 立即打开 build/configure.log，早于
+        # cmake -B build 创建该目录 → 否则 tee 报 "No such file or directory"，
+        # 在 pipefail 下使整步变红。
+        run: |
+          mkdir -p build
+          cmake -B build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTS=OFF \
+            -DBUILD_BENCHMARKS=OFF \
+            -DENABLE_REDIS=ON \
+            -DENABLE_PG=ON \
+            -DENABLE_OPENTELEMETRY=ON \
+            -DENABLE_GUARD_MODEL=ON \
+            -DENABLE_CONTROL_PLANE=ON \
+            -DENABLE_CURL=ON \
+            -DVCPKG_MANIFEST_FEATURES="guard-spm;redis;pg;otel;control-plane" \
+            2>&1 | tee build/configure.log
+
+      - name: Build
+        run: cmake --build build -j"$(nproc)"
+
+      - name: Production-profile smoke (--mode ci, no upstream)
+        # 复用真实 config/aegisgate.prod.yaml（顺带验证其可解析）+ env 注入连接信息。
+        # 不设 strict_backends:false → 让误配 fail-closed 暴露（核心回归价值）。
+        # REDIS_PASSWORD 故意不设：CI redis:7 无口令；prod yaml ${REDIS_PASSWORD} → 空。
+        env:
+          AEGISGATE_API_KEY: ci-dummy-gateway-key
+          AEGISGATE_ADMIN_JWT_SECRET: ci-dummy-admin-jwt-secret-0123456789abcdef
+          POSTGRES_URL: postgresql://aegisgate:aegisgate_test@localhost:5432/aegisgate_test
+        run: |
+          bash scripts/smoke-prod.sh --mode ci \
+            --config config/aegisgate.prod.yaml \
+            --binary build/src/aegisgate \
+            --cmake-log build/configure.log \
+            --host 127.0.0.1 --port 8080
+
+      - name: Upload smoke evidence (redacted)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-smoke-evidence
+          path: .smoke-out/
+          if-no-files-found: ignore
+          retention-days: 7

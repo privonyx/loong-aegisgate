@@ -1,0 +1,59 @@
+replicaCount: 2
+
+image:
+  repository: aegisgate
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: aegisgate.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: "2"
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+deployment:
+  mode: cluster
+
+redis:
+  host: redis
+  port: 6379
+  password: ""
+  db: 0
+
+config:
+  edition: enterprise
+  models_config: /app/config/models.yaml
+  log_level: info
+
+env: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

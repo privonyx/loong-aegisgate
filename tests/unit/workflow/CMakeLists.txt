@@ -1,0 +1,35 @@
+add_executable(test_workflow_dsl test_workflow_dsl.cpp)
+target_link_libraries(test_workflow_dsl PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME WorkflowDslTest COMMAND test_workflow_dsl)
+
+add_executable(test_workflow_dsl_parser test_workflow_dsl_parser.cpp)
+target_link_libraries(test_workflow_dsl_parser PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME WorkflowDslParserTest COMMAND test_workflow_dsl_parser)
+
+add_executable(test_memory_workflow_state_store test_memory_workflow_state_store.cpp)
+target_link_libraries(test_memory_workflow_state_store PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME MemoryWorkflowStateStoreTest COMMAND test_memory_workflow_state_store)
+
+add_executable(test_sqlite_workflow_state_store test_sqlite_workflow_state_store.cpp)
+target_link_libraries(test_sqlite_workflow_state_store PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME SQLiteWorkflowStateStoreTest COMMAND test_sqlite_workflow_state_store)
+
+add_executable(test_thread_pool test_thread_pool.cpp)
+target_link_libraries(test_thread_pool PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME WorkflowThreadPoolTest COMMAND test_thread_pool)
+
+add_executable(test_workflow_engine test_workflow_engine.cpp)
+target_link_libraries(test_workflow_engine PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME WorkflowEngineTest COMMAND test_workflow_engine)
+
+add_executable(test_human_approval_handler test_human_approval_handler.cpp)
+target_link_libraries(test_human_approval_handler PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME HumanApprovalNodeHandlerTest COMMAND test_human_approval_handler)
+
+add_executable(test_workflow_approval_applier test_workflow_approval_applier.cpp)
+target_link_libraries(test_workflow_approval_applier PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME WorkflowApprovalApplierTest COMMAND test_workflow_approval_applier)
+
+add_executable(test_workflow_e2e test_workflow_e2e.cpp)
+target_link_libraries(test_workflow_e2e PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME WorkflowEndToEndTest COMMAND test_workflow_e2e)

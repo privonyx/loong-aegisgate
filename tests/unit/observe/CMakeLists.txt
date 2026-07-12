@@ -1,0 +1,108 @@
+add_executable(test_request_logger test_request_logger.cpp)
+target_link_libraries(test_request_logger PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RequestLoggerTest COMMAND test_request_logger)
+
+add_executable(test_metrics test_metrics.cpp)
+target_link_libraries(test_metrics PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME MetricsTest COMMAND test_metrics)
+
+add_executable(test_feedback_bus test_feedback_bus.cpp)
+target_link_libraries(test_feedback_bus PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME FeedbackBusTest COMMAND test_feedback_bus)
+
+add_executable(test_cost_tracker test_cost_tracker.cpp)
+target_link_libraries(test_cost_tracker PRIVATE aegisgate_core GTest::gtest_main)
+# P1-5 baseline test loads config/models.yaml via a repo-relative path.
+add_test(NAME CostTrackerTest COMMAND test_cost_tracker WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(test_router_outcome_replayer test_router_outcome_replayer.cpp)
+target_link_libraries(test_router_outcome_replayer PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME RouterOutcomeReplayerTest COMMAND test_router_outcome_replayer)
+
+add_executable(test_cost_tracker_modality test_cost_tracker_modality.cpp)
+target_link_libraries(test_cost_tracker_modality PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CostTrackerModalityTest COMMAND test_cost_tracker_modality)
+
+add_executable(test_usage_predictor test_usage_predictor.cpp)
+target_link_libraries(test_usage_predictor PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME UsagePredictorTest COMMAND test_usage_predictor)
+
+add_executable(test_alerting test_alerting.cpp)
+target_link_libraries(test_alerting PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AlertingTest COMMAND test_alerting)
+
+add_executable(test_alert_integration test_alert_integration.cpp)
+target_link_libraries(test_alert_integration PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AlertIntegrationTest COMMAND test_alert_integration)
+
+add_executable(test_observe_integration test_observe_integration.cpp)
+target_link_libraries(test_observe_integration PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ObserveIntegrationTest COMMAND test_observe_integration)
+
+add_executable(test_observability_wiring test_observability_wiring.cpp)
+target_link_libraries(test_observability_wiring PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ObservabilityWiringTest COMMAND test_observability_wiring)
+
+add_executable(test_tracing test_tracing.cpp)
+target_link_libraries(test_tracing PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME TracingTest COMMAND test_tracing)
+
+add_executable(test_alert_dispatcher test_alert_dispatcher.cpp)
+target_link_libraries(test_alert_dispatcher PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AlertDispatcherTest COMMAND test_alert_dispatcher)
+
+add_executable(test_alert_channels test_alert_channels.cpp)
+target_link_libraries(test_alert_channels PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AlertChannelsTest COMMAND test_alert_channels)
+
+add_executable(test_compliance_reporter test_compliance_reporter.cpp)
+target_link_libraries(test_compliance_reporter PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ComplianceReporterTest COMMAND test_compliance_reporter)
+
+add_executable(test_quality_scorer test_quality_scorer.cpp)
+target_link_libraries(test_quality_scorer PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME QualityScorerTest COMMAND test_quality_scorer)
+
+add_executable(test_token_estimator test_token_estimator.cpp)
+target_link_libraries(test_token_estimator PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME TokenEstimatorTest COMMAND test_token_estimator)
+
+add_executable(test_cost_attribution test_cost_attribution.cpp)
+target_link_libraries(test_cost_attribution PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CostAttributionTest COMMAND test_cost_attribution)
+
+add_executable(test_anomaly_detector test_anomaly_detector.cpp)
+target_link_libraries(test_anomaly_detector PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME AnomalyDetectorTest COMMAND test_anomaly_detector)
+
+add_executable(test_quality_monitor test_quality_monitor.cpp)
+target_link_libraries(test_quality_monitor PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME QualityMonitorTest COMMAND test_quality_monitor)
+
+add_executable(test_cost_optimizer test_cost_optimizer.cpp)
+target_link_libraries(test_cost_optimizer PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CostOptimizerTest COMMAND test_cost_optimizer)
+
+add_executable(test_cost_optimizer_v2 test_cost_optimizer_v2.cpp)
+target_link_libraries(test_cost_optimizer_v2 PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CostOptimizerV2Test COMMAND test_cost_optimizer_v2)
+
+add_executable(test_savings_aggregator test_savings_aggregator.cpp)
+target_link_libraries(test_savings_aggregator PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME SavingsAggregatorTest COMMAND test_savings_aggregator)
+
+# TASK-20260617-02 Epic 2 — write-behind persistence + reload.
+add_executable(test_savings_persistence test_savings_persistence.cpp)
+target_link_libraries(test_savings_persistence PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME SavingsPersistenceTest COMMAND test_savings_persistence)
+
+# TASK-20260617-02 Epic 3 — CostTracker startup reload.
+add_executable(test_cost_tracker_reload test_cost_tracker_reload.cpp)
+target_link_libraries(test_cost_tracker_reload PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CostTrackerReloadTest COMMAND test_cost_tracker_reload)
+
+add_executable(test_crash_handler test_crash_handler.cpp)
+target_link_libraries(test_crash_handler PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME CrashHandlerTest COMMAND test_crash_handler)
+
+add_subdirectory(recovery)

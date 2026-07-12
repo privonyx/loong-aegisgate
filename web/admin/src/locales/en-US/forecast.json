@@ -1,0 +1,22 @@
+{
+  "title": "Usage & Budget Forecast",
+  "toast": {
+    "loadFailed": "Failed to load forecast"
+  },
+  "historyDays": "History days",
+  "forecastDays": "Forecast days",
+  "budget": "Budget $",
+  "budgetAria": "Budget",
+  "stat": {
+    "dailyTrend": "Daily Trend ($/day)",
+    "rSquared": "Goodness of Fit R²",
+    "exhaustionDate": "Budget Exhaustion Date",
+    "sufficient": "Sufficient",
+    "budgetSubtitle": "Budget ${{budget}}"
+  },
+  "chart": {
+    "title": "Historical Cost vs Predicted Cost",
+    "historical": "Historical",
+    "predicted": "Predicted"
+  }
+}

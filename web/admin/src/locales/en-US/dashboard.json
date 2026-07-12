@@ -1,0 +1,29 @@
+{
+  "refreshMode": {
+    "realtime": "Real-time updates (WebSocket)",
+    "polling": "Auto-refresh every 15s"
+  },
+  "kpi": {
+    "totalRequests": "Total Requests",
+    "activeTenants": "Active Tenants",
+    "totalCost": "Total Cost",
+    "cacheHitRate": "Cache Hit Rate",
+    "savedRecent": "Saved (last 30 days)",
+    "savedDetailAria": "View savings details"
+  },
+  "charts": {
+    "requestTrend": "Request Volume Trend (24h)",
+    "recentAudits": "Recent Audit Events",
+    "noAudits": "No audit events",
+    "modelSavings": "Model Savings Distribution (last 30 days)",
+    "noSavings": "No savings data (no events since aggregator started)",
+    "securityEvents": "Security Event Statistics",
+    "securitySeverity": " (by severity)",
+    "noSecurity": "No security events"
+  },
+  "security": {
+    "injection": "Injection / Blocked",
+    "normalized": "Input Normalized",
+    "rateLimit": "Rate Limited"
+  }
+}

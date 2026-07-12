@@ -1,0 +1,28 @@
+# Topic Boundary Control Configuration
+
+mode: "blacklist"  # whitelist | blacklist | both
+
+whitelist:
+  topics:
+    - "programming"
+    - "software development"
+    - "data analysis"
+    - "general knowledge"
+    - "writing assistance"
+    - "translation"
+
+blacklist:
+  keywords:
+    - "制造武器"
+    - "制造炸弹"
+    - "毒品制作"
+    - "自杀方法"
+    - "make a bomb"
+    - "create weapons"
+    - "synthesize drugs"
+    - "how to hack"
+    - "illegal activities"
+
+  patterns:
+    - "(?i)how\\s+to\\s+(make|build|create)\\s+(a\\s+)?(bomb|weapon|explosive)"
+    - "(?i)(synthesize|manufacture|produce)\\s+(meth|cocaine|heroin|fentanyl)"

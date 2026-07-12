@@ -1,0 +1,522 @@
+server:
+  host: "0.0.0.0"
+  port: 8080
+  threads: 0
+  request_timeout_seconds: 120
+
+edition: community
+license_file: ""
+
+models_config: "config/models.yaml"
+
+auth:
+  enabled: true
+  api_keys:
+    - "${AEGISGATE_API_KEY}"
+
+rbac:
+  enabled: false
+
+tls:
+  enabled: false
+  # Optional; omit or 0 to use HTTP port + 1. Override with AEGISGATE_TLS_PORT.
+  port: 0
+  cert_path: ""
+  key_path: ""
+
+audit:
+  log_path: "logs/audit.log"
+  retention_days: 0
+
+rate_limit:
+  max_tokens: 10000.0
+  refill_rate: 100.0
+
+circuit_breaker:
+  failure_threshold: 3
+  reset_timeout_seconds: 30
+  half_open_max_calls: 1
+  max_circuits: 512
+  circuit_idle_ttl_seconds: 0
+
+limits:
+  max_request_body_size: 65536
+  max_connections: 10000
+
+features:
+  guardrail:
+    custom_rules: false
+  management:
+    mode: cli
+  deployment:
+    mode: standalone
+
+storage:
+  cache_backend: memory      # memory | redis
+  persistent_backend: sqlite  # sqlite | postgres | memory
+  sqlite:
+    path: "data/aegisgate.db"
+    wal_mode: true
+  # redis:                   # requires -DENABLE_REDIS=ON
+  #   host: "127.0.0.1"
+  #   port: 6379
+  #   password: "${REDIS_PASSWORD}"
+  #   db: 0
+  #   pool_size: 4
+  #   connect_timeout_ms: 3000
+  #   command_timeout_ms: 1000
+  # postgres:                # requires -DENABLE_PG=ON
+  #   url: "${POSTGRES_URL}"
+  #   pool_size: 4
+  #   connect_timeout_ms: 5000
+
+embedding:
+  model_path: "models/bge-small-zh-v1.5.onnx"
+  vocab_path: "models/vocab.txt"
+
+vector_store:
+  backend: hnswlib  # hnswlib | milvus | qdrant
+  # milvus:                    # requires -DENABLE_MILVUS=ON
+  #   host: "127.0.0.1"
+  #   port: 19530
+  #   collection_prefix: "aegisgate_cache"
+  #   metric_type: "IP"        # IP (inner product) | L2 | COSINE
+  #   token: ""
+  #   connect_timeout_ms: 5000
+  #   request_timeout_ms: 10000
+  #   auto_create_collection: true
+  # qdrant:                    # requires -DENABLE_QDRANT=ON
+  #   host: "127.0.0.1"
+  #   port: 6333
+  #   collection_prefix: "aegisgate_cache"
+  #   distance: "Cosine"       # Cosine | Euclid | Dot
+  #   api_key: ""
+  #   connect_timeout_ms: 5000
+  #   request_timeout_ms: 10000
+  #   auto_create_collection: true
+
+cache:
+  threshold: 0.95
+  ttl_seconds: 3600
+  max_entries: 10000
+  max_partitions: 64
+  context_aware: true
+  warmup_file: ""
+
+  # Multi-turn conversation context hashing — isolates cache entries by
+  # conversation history so that the same final user question in different
+  # conversations does not produce false cache hits.
+  # mode: none | full | window
+  #   none   — legacy behaviour (key = last user message only)
+  #   full   — hash ALL prior messages into the partition key
+  #   window — hash the last N context messages (excluding the final user msg)
+  # window_size: number of preceding messages to hash (only used when mode=window)
+  conversation_hash:
+    mode: full
+    window_size: 4
+
+  # ---------------------------------------------------------------------------
+  # Phase 6.4 — Multi-turn conversation cache (TASK-20260513-01).
+  # When enabled, the runtime wires:
+  #   - ConversationIdResolver  (D2=C: client metadata.conversation_id wins;
+  #                              otherwise SHA-256 of message history)
+  #   - SummarizerFactory       (D3=B: ONNX primary + RuleBased fallback,
+  #                              wrapped in CompositeSummarizer)
+  #   - SemanticCache.partition_key V2  (SR1: tenant_id is mixed in to harden
+  #                              cross-tenant isolation)
+  # All knobs are SAFE at default (disabled) — turning them on does not relax
+  # any existing tenant boundary; it only adds richer keying + summary text.
+  # See docs/guides/conversation-cache.md for the full data-flow diagram.
+  conversation_cache:
+    enabled: false
+    summarizer:
+      # type: rule_based | onnx
+      #   rule_based — zero-dep keyword + length truncation (always available)
+      #   onnx       — local ONNX summary model; on isReady=false the factory
+      #                silently degrades to rule_based (CR1 CompositeSummarizer)
+      type: rule_based
+      # Only used when type=onnx. Build must include AEGISGATE_ENABLE_ONNX
+      # (build-cp-on / build-cp-pg paths). Empty path also degrades to rule_based.
+      onnx_model_path: ""
+      # SR7: hard ceiling for ONNX summarization. The summarizer aborts and
+      # returns the rule_based fallback if it has not produced a result in
+      # this many milliseconds. Keep <= 200 ms for hot-path safety.
+      max_summary_ms: 200
+      # Optional input truncation (tokens). Shields the model from runaway
+      # context payloads; rule_based summarizer ignores this field.
+      max_input_tokens: 4096
+    id_resolver:
+      # D2=C — order of resolution:
+      #   1. ChatRequest.metadata.conversation_id (client-supplied, opaque)
+      #   2. SHA-256 over message history (deterministic when client omits id)
+      #   3. First-turn fallback (request_id) — never collides across requests
+      # The flag below ONLY toggles whether the resolver is consulted at all;
+      # SR1 tenant mixing happens regardless when conversation_cache.enabled=true.
+      enabled: true
+
+  adaptive_threshold:
+    enabled: false
+    min_threshold: 0.85
+    max_threshold: 0.98
+    adjustment_rate: 0.01
+    window_size: 100
+
+  policy:
+    enabled: true
+    skip_models: []
+    max_temperature: 1.0
+    skip_streaming: false
+
+security:
+  unicode_normalization: true
+  encoding_detection: true
+  encoding_min_base64_length: 20
+
+  guard_model:
+    enabled: false
+    model_path: "models/guard/deberta-v3-base-prompt-injection-v2.onnx"
+    spm_model_path: "models/guard/deberta-v3-base-prompt-injection-v2.spm.model"
+    vocab_path: "models/vocab.txt"  # legacy WordPiece fallback (unused by DeBERTa-v3 guard)
+    threshold: 0.5
+    fail_policy: open  # open (allow on model/tokenizer failure) | closed (block on failure)
+
+  # External Safety APIs (L4) — cloud-based content moderation
+  # Requires -DENABLE_CURL=ON for real HTTP calls, or use plugin HttpPostFn
+  external_safety:
+    enabled: false
+    mode: any          # any | all | majority
+    fail_policy: open  # open (allow on error) | closed (block on error)
+    parallel: true     # call providers in parallel
+
+    # -------------------------------------------------------------------------
+    # Phase 6.3 — Shadow mode (TASK-20260513-01 Epic 4).
+    # When shadow_mode is true, ExternalSafetyStage::process() returns
+    # Continue immediately and dispatches the upstream scan asynchronously
+    # (fire-and-forget). Each shadow scan still writes an audit entry tagged
+    # `shadow=true` (SR3) so operators can compare shadow vs. live judgments
+    # before flipping the legacy synchronous path back on.
+    #
+    # Use this to roll out a NEW provider safely:
+    #   1. shadow_mode: true     — observe judgments via audit log only
+    #   2. tune thresholds based on FP/FN ratio in the shadow data
+    #   3. shadow_mode: false    — switch to blocking once confident
+    shadow_mode: false
+    # SR6 — backpressure cap. When this many shadow workers are already
+    # in-flight, new dispatches are skipped (counter shadow_skipped++) with
+    # a single warn log. Set to 0 to forbid all shadow dispatch.
+    shadow_max_inflight: 1000
+    # SR3 — TTL applied when forwarding the shadow audit entry to log
+    # rotation / SIEM. Defaults to 24 hours.
+    shadow_audit_ttl_seconds: 86400
+
+    openai_moderation:
+      enabled: false
+      api_key: "${OPENAI_API_KEY}"
+      base_url: "https://api.openai.com"
+      model: "omni-moderation-latest"
+      timeout_ms: 5000
+
+    perspective:
+      enabled: false
+      api_key: "${PERSPECTIVE_API_KEY}"
+      base_url: "https://commentanalyzer.googleapis.com"
+      threshold: 0.7
+      attributes:
+        - TOXICITY
+        - SEVERE_TOXICITY
+        - IDENTITY_ATTACK
+        - INSULT
+        - PROFANITY
+        - THREAT
+      timeout_ms: 5000
+
+  abuse_detection:
+    enabled: true
+    window_seconds: 300
+    warn_threshold: 5
+    throttle_threshold: 10
+    block_threshold: 20
+    block_duration_seconds: 1800
+    throttle_factor: 0.5
+    max_keys_per_shard: 1024
+    # Content-similarity clustering (SimHash); fingerprints are node-local even in Redis mode
+    similarity_enabled: true
+    similarity_hamming_threshold: 3
+    similarity_max_fingerprints: 32
+    similarity_max_content_bytes: 8192
+
+telemetry:
+  enabled: false                          # requires -DENABLE_OPENTELEMETRY=ON
+  otlp_endpoint: "http://localhost:4318"  # Tempo / OTel Collector OTLP HTTP endpoint
+  service_name: "aegisgate"
+  sample_ratio: 1.0                       # 1.0 = all requests, 0.1 = 10%
+
+admin:
+  jwt_secret: ""          # REQUIRED for web panel. Set via AEGISGATE_ADMIN_JWT_SECRET env var
+  jwt_expire_seconds: 28800  # 8 hours
+  cors_origins: ["http://localhost:5173"]
+  static_dir: "web/admin/dist"
+  # allowed_ips: []       # Empty or omitted = allow all. When set, only listed IPs can access /admin/*
+  # allowed_ips: ["127.0.0.1", "10.0.0.0/8"]
+
+plugins:
+  enabled: false
+  search_path: "config/plugins"
+  # stages:
+  #   - name: "my_filter"
+  #     path: "my_filter.so"   # 共享库扩展名: Linux .so
+  #     position: outbound    # inbound | outbound
+  #     order: 0
+
+deployment:
+  mode: standalone  # standalone | cluster (enterprise, requires Redis)
+
+routing:
+  type: cost_aware  # basic | cost_aware | ml
+  # ML router weights (only used when type=ml)
+  ml:
+    cost_weight: 0.4
+    quality_weight: 0.35
+    latency_weight: 0.25
+  # A/B test experiments (optional, wraps any base router)
+  # ab_tests:
+  #   - name: "gpt4o-vs-claude"
+  #     variants:
+  #       - model: "gpt-4o"
+  #         weight: 50
+  #       - model: "claude-3-sonnet"
+  #         weight: 50
+  #     enabled: true
+  #     tenant_id: ""
+
+  # Geo-aware routing (Phase 9.1.1) — wraps the base router (and A/B router if any).
+  # Filters candidate models by the caller's geographic region.
+  # Models must tag their region with `region:<name>` in models.yaml, e.g.
+  #   tags: ["region:us-east", "high-quality"]
+  # geo:
+  #   enabled: false
+  #   # affinity: strict | prefer | any (default: prefer)
+  #   #   strict — region mismatch returns empty (upstream falls back)
+  #   #   prefer — mismatch logs a warning but the request continues
+  #   #   any    — region is purely observational, no filtering
+  #   affinity: prefer
+  #   default_client_region: us-east
+  #   header_names:
+  #     - X-AegisGate-Region
+  #     - X-Client-Region
+  #   # Optional CIDR → region mapping (applied if header/extra fields are absent)
+  #   ip_region_map:
+  #     - cidr: 10.0.0.0/8
+  #       region: us-east
+  #     - cidr: 172.16.0.0/12
+  #       region: eu-central
+  #   # Optional shorthand aliases (applied after case-normalization / trim)
+  #   region_aliases:
+  #     us: us-east
+  #     eu: eu-central
+  #     apac: ap-east
+
+## ---------------------------------------------------------------------------
+## Phase 11.0/11.5: Autonomy infrastructure (TASK-20260417-04, TASK-20260518-02)
+##
+## All autonomy settings live under the single `autonomy:` block so the
+## kill switch (`autonomy.enabled` + SR17 `AEGISGATE_DISABLE_AUTONOMY` env)
+## governs every Phase 11.x track uniformly. Defaults are SAFE: every
+## subsystem is OFF and propose() returns false until operators opt in.
+autonomy:
+  # Master switch for the cross-cutting AutonomyApprovalWorkflow. When
+  # false, ANY propose() / approve() / apply() is rejected — appliers
+  # never run, persistent proposals are still kept (for forensic review)
+  # but no live mutation reaches MLRouter / config / runtime. The
+  # AEGISGATE_DISABLE_AUTONOMY env var still wins over this flag (SR17).
+  enabled: false
+
+  # Auto-apply policy. Allowed values:
+  #   manual_only    — every proposal sits in PROPOSED until a human
+  #                    approves via /admin/api/autonomy or aegisctl.
+  #   auto_low_risk  — workflow auto-approves when the applier's
+  #                    isLowRisk() returns true (CostAutonomyApplier
+  #                    encodes the 4-rule whitelist from /creative C2).
+  #   auto_all       — workflow auto-approves every proposal. NOT
+  #                    recommended outside dev; intended only for
+  #                    short-lived experiments under operator watch.
+  auto_apply_mode: manual_only
+
+  # ApprovalQueue::prune() horizon. APPLIED / REJECTED / ROLLED_BACK
+  # proposals older than this many days are deleted from PersistentStore
+  # and ApprovalQueue cache. 0 keeps every record forever (forensic
+  # storage; NOT recommended in prod due to unbounded growth).
+  proposal_retention_days: 90
+
+  # Phase 11.0 FeedbackBus (TASK-20260417-04). Process-internal pub/sub
+  # event bus for autonomy data-loop modules (adaptive guard, self-tuning
+  # router, self-healing ops, cost optimizer). Disabled by default;
+  # enabling does not change existing request processing — only arms the
+  # in-memory dispatcher that subscribers can attach to.
+  feedback_bus:
+    enabled: false
+    max_queue_size: 10000          # bounded queue; drops oldest when full
+    drop_policy: oldest            # v0 only supports "oldest"
+
+  # Phase 11.5 CostOptimizer 2.0 → ApprovalWorkflow (TASK-20260518-02).
+  # When enabled, CostOptimizer::proposeRecommendations() submits each
+  # advisory to AutonomyApprovalWorkflow instead of merely returning it.
+  # The legacy v1 getRecommendations() read path stays available so
+  # dashboards keep working regardless of this flag.
+  cost_optimizer:
+    enabled: false
+
+## ---------------------------------------------------------------------------
+## Phase 11.5 BudgetGuard (TASK-20260518-02) — inbound stage that enforces
+## per-tenant 24h spend caps and per-request cost estimates. Sits between
+## ResolveStage and the Router so a downgrade decision can stamp
+## quality_tier=economy *before* routing dispatches the upstream call.
+##
+## Default behaviour is OFF. Once enabled, fail-CLOSED for cost (downgrade)
+## and fail-OPEN for the guard's own errors (tracker unreachable etc.) so
+## an observability bug never takes the data plane down.
+budget_guard:
+  enabled: false
+  # When the rolling 24h cost for a tenant + the in-flight estimate
+  # crosses this threshold, BudgetGuardStage stamps quality_tier=economy.
+  per_tenant_24h_usd: 100.0
+  # Hard ceiling for any single request's estimated cost. Above this, the
+  # request is downgraded to economy regardless of the tenant aggregate.
+  per_request_max_usd: 1.0
+  # If the guard itself throws (e.g. CostTracker mutex unreachable), let
+  # the request through unchanged when true; reject (Stage::Result::Fail)
+  # when false. Default true — observability bugs should not 503 traffic.
+  fail_open_on_error: true
+  # Target quality_tier on trigger. Must be a value MLRouter recognises
+  # (typically "economy" | "standard"). Empty defaults to "economy".
+  downgrade_tier: economy
+  # Response header stamped on every downgraded request, so admins can
+  # surface "your latest call was cost-capped" via web admin / SDK
+  # surface. Set name OR value to empty to disable the header entirely.
+  downgrade_header_name: X-AegisGate-Budget-Guard
+  downgrade_header_value: triggered
+
+## ---------------------------------------------------------------------------
+## Phase 6.1 — Multimodal routing (TASK-20260513-01 Epic 2).
+## When `enabled: true`, the runtime instantiates a ModalityRouter and
+## registers OpenAI{Embedding,ImageGen,AudioTranscribe,AudioSpeech,Moderation}
+## handlers backed by the OpenAI ModalityUpstream adapter. The 5 proxy
+## endpoints (`/v1/embeddings`, `/v1/images/generations`,
+## `/v1/audio/transcriptions`, `/v1/audio/speech`, `/v1/moderations`) then
+## route through the modality fast path; if N=1 the router short-circuits
+## (~O(1) overhead vs. legacy ConnectorRegistry lookup), if N>1 it picks
+## by `policy` below.
+##
+## Default: disabled — falls back to the legacy passthrough proxy unchanged.
+multimodal:
+  enabled: false
+  # CR2 §4.4 — RoutingPolicy applied per modality when N>1 handlers are
+  # registered. Allowed values: cheapest | round_robin | fastest_p99.
+  # NOTE: per-modality override is supported in code; YAML currently sets
+  # the same policy for ALL modalities to keep config terse.
+  policy: cheapest
+  # SR5 — RBAC view: per-modality cost dimension is recorded by
+  # CostTracker.modality. The admin Savings page already filters by
+  # effectiveTenantId, so SuperAdmin sees aggregated bars while
+  # TenantAdmin/Viewer see only their own breakdown.
+  cost_attribution:
+    enabled: true
+  # Per-(modality, identity) token-bucket quotas. Identity is the tenant_id
+  # by default; see ModalityRateLimiter::makeKey for the full key formula.
+  # When enabled=true and a quota matches, requests over the limit are
+  # rejected at the rate-limit stage with HTTP 429 + AEGIS-2005.
+  #
+  # Phase 6.1 Epic 5.1c (B1, TASK-20260515-01) — SR-NEW4 fail-open semantics:
+  # 当 quotas 未配置（或某个 modality 未列出）时，gateway 对该 modality 不做
+  # per-request 配额限制（fail-open）。这是有意的设计：
+  # 1. 全局 RateLimiter (`rate_limit.global_max_tokens`) 仍兜底，DoS 风险有限。
+  # 2. 错误配置（粘错 modality 名拼写）不应让所有请求 503。
+  # 3. 运维可靠性优先：quota 缺失不是攻击信号，是配置 gap。
+  # 4. 检测：通过 `aegisgate_modality_rate_limited_total{modality}` 反向监控
+  #    哪些 modality 已配置 + 实际触发；运维 alert "未触发 modality
+  #    counter > 24h" 提示 quota 漏配（fail-open 不掩盖运维事故）。
+  #
+  # When `multimodal.rate_limit.quotas` is unset (or a modality is not listed),
+  # the gateway enforces NO per-request quota for that modality (fail-open).
+  # This is intentional:
+  # 1. Global RateLimiter still applies — DoS risk is bounded.
+  # 2. Misconfiguration (typo in modality name) should NOT 503 every request.
+  # 3. Operational reliability over fail-closed strictness.
+  # 4. Detection: alert on "no `aegisgate_modality_rate_limited_total{modality}`
+  #    increment for >24h" surfaces missing quotas WITHOUT hiding ops gaps.
+  rate_limit:
+    enabled: false
+    # quotas:
+    #   - modality: embedding         # embedding | image_gen | audio_transcribe | audio_speech | moderation
+    #     identity: "*"               # tenant_id, or "*" for the global default
+    #     max_tokens: 60              # bucket size
+    #     refill_rate: 1.0            # tokens / second
+    #   - modality: image_gen
+    #     identity: "tenant-acme"
+    #     max_tokens: 10
+    #     refill_rate: 0.1            # ≈ 360 / hour
+
+## ---------------------------------------------------------------------------
+## Phase 6.2 — Cache snapshot migration (TASK-20260513-01 Epic 3).
+## CacheMigrator is a CLI-only tool (`aegisctl cache dump|restore`). The
+## server itself does NOT consume any new yaml field; entries below are
+## reference documentation of what the CLI expects in the operator's shell:
+##
+##   AEGISGATE_CP_API_KEY=<sha256-hash>     # SR8 — REQUIRED for both
+##                                            dump and restore; missing key
+##                                            -> CLI exits 2 (no-op)
+##   AEGISGATE_CACHE_MIGRATE_TENANT_ALLOW=  # SR2 — comma-separated allowlist;
+##     "tenant-a,tenant-b"                   when set, restore drops entries
+##                                            whose tenant_id is not listed
+##
+## Snapshot format is a self-described binary blob: magic "AGCM" + uint32
+## version + uint32 dim + uint64 entries + records + tail SHA-256 (SR2).
+## See docs/guides/cache-migration.md for examples + safety notes.
+
+token_optimization:
+  prompt_compression:
+    enabled: true
+    max_context_messages: 20
+    compress_whitespace: true
+    dedup_system_prompts: true
+  smart_max_tokens:
+    enabled: true
+    default_max_output: 2048
+    max_output_ratio: 2.0
+    min_output_tokens: 100
+
+## Phase 8: Agent Orchestration (enterprise, requires agent_orchestration feature)
+agent:
+  enabled: false
+  max_steps: 10
+  max_total_timeout_ms: 120000
+  tool_default_timeout_ms: 30000
+  tool_max_output_bytes: 1048576
+
+## Phase 8: RAG Pipeline (enterprise, requires rag_pipeline feature)
+rag:
+  enabled: false
+  top_k: 3
+  min_relevance: 0.7
+  max_context_tokens: 2000
+  chunk_size: 512
+  chunk_overlap: 64
+  injection_position: "before_user"
+
+## Phase 8: Advanced Observability
+observability:
+  cost_attribution:
+    enabled: false
+  anomaly_detection:
+    enabled: false
+    z_score_threshold: 3.0
+    window_size: 100
+  quality_monitoring:
+    enabled: false
+    alert_threshold: 0.3
+  cost_optimization:
+    enabled: false
+
+logging:
+  level: info
+  file: "logs/aegisgate.log"

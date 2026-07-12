@@ -1,0 +1,75 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+build-*/
+Testing/
+*.tsbuildinfo
+*.log
+
+# Runtime data
+data/
+uploads/
+logs/
+models/guard/
+*.db
+*.db-wal
+*.db-shm
+
+# Large model weights & prebuilt runtime — fetched on demand, never committed
+#   models:      scripts/download_model.sh
+#   onnxruntime: scripts/fetch-onnxruntime.sh
+models/*.onnx
+models/vocab.txt
+third_party/onnxruntime-*/
+
+# Production smoke-test evidence output (contains masked logs; never committed)
+.smoke-out/
+
+# Secrets & Credentials
+*.key
+*.pem
+*.cert
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.secret
+*.credential
+credentials/
+secrets/
+vcpkg_installed/
+
+# Phase 9.3 control-plane developer TLS material — created by
+# scripts/gen-control-plane-dev-certs.sh. Never commit keys.
+.dev-certs/
+
+# embedded vcpkg checkout (toolchain only, not tracked)
+vcpkg/
+*.rdb

@@ -1,0 +1,32 @@
+{
+  "title": "User Management",
+  "filterPlaceholder": "Filter by tenant ID",
+  "newUser": "New User",
+  "editUser": "Edit User",
+  "create": "Create",
+  "col": {
+    "username": "Username",
+    "displayName": "Display Name",
+    "tenant": "Tenant",
+    "role": "Role",
+    "status": "Status",
+    "createdAt": "Created At"
+  },
+  "deleteTitle": "Delete User",
+  "deleteConfirm": "Are you sure you want to delete user \"{{username}}\"?",
+  "form": {
+    "username": "Username *",
+    "tenantId": "Tenant ID",
+    "tenantIdPlaceholder": "Leave empty to use current tenant",
+    "displayName": "Display Name",
+    "role": "Role"
+  },
+  "toast": {
+    "loadFailed": "Failed to load",
+    "deleted": "User deleted",
+    "deleteFailed": "Failed to delete",
+    "updated": "User updated",
+    "created": "User created",
+    "saveFailed": "Failed to save"
+  }
+}

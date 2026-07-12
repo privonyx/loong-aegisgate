@@ -1,0 +1,10 @@
+add_executable(test_redis_state_store test_redis_state_store.cpp)
+target_link_libraries(test_redis_state_store PRIVATE aegisgate_core GTest::gtest_main)
+if(ENABLE_REDIS)
+    target_link_libraries(test_redis_state_store PRIVATE hiredis::hiredis)
+endif()
+add_test(NAME RedisStateStoreTest COMMAND test_redis_state_store)
+
+add_executable(test_mock_state_store test_mock_state_store.cpp)
+target_link_libraries(test_mock_state_store PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME MockStateStoreTest COMMAND test_mock_state_store)

@@ -1,0 +1,26 @@
+# Phase 11.4 self-healing ops — Runbook 4/5.
+#
+# 场景：tenant token 消耗异常（每请求 token 数偏离正常）→ 降低 budget
+# cap，限制爆破半径（成本兜底）。
+
+id: "rb_token_anomaly_cooldown"
+description: "tenant token 异常消耗 → 临时下调 budget cap"
+triggers:
+  - kind: "rca_required"
+    rca_rule_id: "rca_token_anomaly"
+    rca_min_score: 0.6
+actions:
+  - action: "apply_budget_cap"
+    payload:
+      tenant_id: "${tenant_id}"
+      new_per_tenant_24h_usd: 50.0
+      current_per_tenant_24h_usd: 100.0
+      reason: "token anomaly cooldown"
+rollback_actions:
+  - action: "apply_budget_cap"
+    payload:
+      tenant_id: "${tenant_id}"
+      new_per_tenant_24h_usd: 100.0
+      previous_per_tenant_24h_usd: 50.0
+approval_required: true
+cooldown_seconds: 1800

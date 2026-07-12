@@ -1,0 +1,256 @@
+name: CI · control-plane
+
+# Phase 9.3 Epic 9.1 — dedicated workflow for the control-plane opt-in
+# feature. We keep this separate from `ci.yml` so:
+#   * PRs that never touch the control plane never wait for this job,
+#   * the extra vcpkg feature (grpc++/protobuf link) never bloats the
+#     default PR matrix runtime,
+#   * operators can re-run it on demand via `workflow_dispatch`.
+#
+# Triggers:
+#   push  to main (full safety net after merge)
+#   pull_request touching control-plane files
+#   workflow_dispatch (on-demand)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'api/control-plane/proto/control_plane/**'
+      - 'src/control_plane/**'
+      - 'src/cli/*config*'
+      - 'src/cli/*rollout*'
+      - 'src/cli/grpc_*'
+      - 'tests/unit/control_plane/**'
+      - 'api/control-plane/openapi/**'
+      - 'scripts/verify-openapi-sync.sh'
+      - 'scripts/test-control-plane-local.sh'
+      - 'scripts/test-rollout-e2e.sh'
+      - 'scripts/gen-control-plane-dev-certs.sh'
+      - 'tests/scripts/**'
+      - 'vcpkg.json'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - '.github/workflows/ci-control-plane.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VCPKG_DEFAULT_TRIPLET: x64-linux
+  # Disable lukka/run-vcpkg@v11's default x-gha binary-cache integration,
+  # which requires ACTIONS_RUNTIME_TOKEN / ACTIONS_CACHE_URL env vars that
+  # are only reachable via actions/github-script. The workflow uses the
+  # built-in actions/cache@v4 around build/vcpkg_installed instead.
+  VCPKG_BINARY_SOURCES: "clear"
+
+jobs:
+
+  verify-openapi-sync:
+    name: openapi-sync
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify api/control-plane/openapi/control-plane-v1.yaml covers every proto field
+        run: bash scripts/verify-openapi-sync.sh
+
+  static-lint-shell:
+    name: shellcheck + actionlint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck + actionlint
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          curl -sSfL -o actionlint.tgz \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.1/actionlint_1.7.1_linux_amd64.tar.gz
+          tar -xzf actionlint.tgz actionlint
+          sudo mv actionlint /usr/local/bin/
+      - name: shellcheck control-plane scripts
+        run: |
+          shellcheck \
+            scripts/verify-openapi-sync.sh \
+            scripts/test-control-plane-local.sh \
+            scripts/test-rollout-e2e.sh \
+            scripts/gen-control-plane-dev-certs.sh \
+            tests/scripts/test_verify_openapi_sync.sh \
+            tests/scripts/test_cp_integration_cleanup.sh
+      - name: actionlint on workflows
+        run: actionlint .github/workflows/ci-control-plane.yml
+
+  build-on-path:
+    name: ENABLE_CONTROL_PLANE=ON (Release)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    needs: [verify-openapi-sync]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ ninja-build pkg-config \
+                                   libssl-dev libcurl4-openssl-dev \
+                                   python3 sqlite3
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: '01f602195983451bc83e72f4214af2cbc495aa94'
+
+      - name: Cache vcpkg installed packages (ON-path)
+        uses: actions/cache@v4
+        with:
+          path: build-cp-on/vcpkg_installed
+          key: vcpkg-${{ runner.os }}-cp-on-${{ hashFiles('vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-cp-on-
+
+      - name: Configure (ON-path)
+        run: |
+          cmake -B build-cp-on -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTS=ON \
+            -DBUILD_BENCHMARKS=OFF \
+            -DENABLE_CONTROL_PLANE=ON \
+            -DVCPKG_MANIFEST_FEATURES='control-plane'
+
+      - name: Build (ON-path)
+        run: cmake --build build-cp-on -j"$(nproc)"
+
+      - name: Run CTest (ON-path)
+        run: cd build-cp-on && ctest --output-on-failure -j"$(nproc)"
+        timeout-minutes: 15
+
+      - name: Integration smoke (scripts/test-control-plane-local.sh)
+        run: bash scripts/test-control-plane-local.sh
+
+      - name: Rollout e2e smoke (scripts/test-rollout-e2e.sh)
+        run: bash scripts/test-rollout-e2e.sh
+
+      - name: Integration cleanup self-test
+        run: bash tests/scripts/test_cp_integration_cleanup.sh
+
+      - name: OpenAPI verify self-test
+        run: bash tests/scripts/test_verify_openapi_sync.sh
+
+      - name: Upload control-plane logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-logs-on
+          path: |
+            build-cp-on/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
+
+  build-off-path:
+    # Asserts that ENABLE_CONTROL_PLANE=OFF (the default) still links
+    # cleanly and keeps CTest green. This is the SR-bound regression guard
+    # for the "opt-in with zero runtime cost" property.
+    name: ENABLE_CONTROL_PLANE=OFF (default)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    needs: [verify-openapi-sync]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ ninja-build pkg-config \
+                                   libssl-dev libcurl4-openssl-dev
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: '01f602195983451bc83e72f4214af2cbc495aa94'
+
+      - name: Cache vcpkg installed packages (OFF-path)
+        uses: actions/cache@v4
+        with:
+          path: build/vcpkg_installed
+          key: vcpkg-${{ runner.os }}-cp-off-${{ hashFiles('vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-cp-off-
+
+      - name: Configure (default / OFF)
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTS=ON \
+            -DBUILD_BENCHMARKS=OFF
+
+      - name: Build (OFF-path)
+        run: cmake --build build -j"$(nproc)"
+
+      - name: Confirm control-plane binary was NOT produced
+        run: |
+          if [ -x build/src/control_plane/aegisgate-control-plane ] \
+             || [ -x build/src/aegisgate-control-plane ]; then
+            echo "ERROR: ENABLE_CONTROL_PLANE=OFF built the control-plane binary" >&2
+            exit 1
+          fi
+
+      - name: Run CTest (OFF-path)
+        run: cd build && ctest --output-on-failure -j"$(nproc)"
+        timeout-minutes: 10
+
+  dependency-audit:
+    # Phase 9.3 Epic 9.2 — SR12. Trivy scans the repo (vcpkg.json lockfile,
+    # CMake FetchContent URLs, the data-plane Dockerfile if present) for
+    # HIGH/CRITICAL known vulnerabilities. Findings with no fix available
+    # (ignore-unfixed) are reported but do not block the build; everything
+    # else exits non-zero so CI fails loudly.
+    name: trivy fs scan (SR12)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write   # required for the SARIF upload below
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Trivy (pinned binary)
+        # aquasecurity/trivy-action@v0.33.1 has been flaky in its
+        # setup-trivy sub-action when downloading the trivy binary into
+        # GitHub-hosted runners. We install the pinned binary directly,
+        # which is smaller, more reliable, and keeps SR12 intact.
+        # NOTE: trivy release assets use the `Linux-64bit` suffix, not
+        # `linux_amd64`; and older release tags are periodically cleaned
+        # up upstream — keep this reasonably close to the latest.
+        run: |
+          set -euo pipefail
+          TRIVY_VERSION="0.70.0"
+          curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
+            -o /tmp/trivy.tar.gz
+          sudo tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy
+          rm -f /tmp/trivy.tar.gz
+          trivy --version
+
+      - name: Trivy filesystem scan
+        run: |
+          set -euo pipefail
+          trivy fs . \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --format sarif \
+            --output trivy-results.sarif \
+            --exit-code 0
+          # Re-run to actually fail the build if HIGH/CRITICAL are found
+          trivy fs . \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1
+
+      - name: Upload Trivy SARIF to GitHub Security
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy-control-plane'

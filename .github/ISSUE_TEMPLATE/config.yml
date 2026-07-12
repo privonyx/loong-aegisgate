@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Help
+    url: https://github.com/privonyx/loong-aegisgate/discussions/categories/q-a
+    about: Ask questions and get help from the community in GitHub Discussions.
+  - name: Feature Ideas
+    url: https://github.com/privonyx/loong-aegisgate/discussions/categories/ideas
+    about: Share and discuss feature ideas before filing a formal request.
+  - name: Discord Community
+    url: https://discord.gg/aegisgate
+    about: Join our Discord server for real-time chat with contributors and maintainers.
+  - name: Security Vulnerabilities
+    url: https://github.com/privonyx/loong-aegisgate/security/advisories/new
+    about: Report security vulnerabilities privately. Do NOT create a public issue for security bugs.

@@ -1,0 +1,90 @@
+apiVersion: aegisgate.dev/v1alpha1
+kind: ProviderManifest
+metadata:
+  name: openai
+  display_name: OpenAI
+  vendor: OpenAI Inc.
+  homepage: https://openai.com
+  documentation: https://platform.openai.com/docs/api-reference
+  tags: [commercial, chat, tools, vision, multimodal]
+  maturity: stable
+spec:
+  connector:
+    kind: openai
+  endpoint:
+    base_url_default: https://api.openai.com/v1
+    base_url_env: OPENAI_BASE_URL
+    timeout_ms_default: 30000
+    max_retries_default: 2
+  auth:
+    type: bearer
+    header_name: Authorization
+    env_var: OPENAI_API_KEY
+    supports_multi_key: true
+  compatibility:
+    openai_chat_completions: full
+    fields:
+      - name: messages
+        status: supported
+      - name: model
+        status: supported
+      - name: temperature
+        status: supported
+      - name: top_p
+        status: supported
+      - name: max_tokens
+        status: supported
+      - name: stream
+        status: supported
+      - name: stop
+        status: supported
+      - name: tools
+        status: supported
+      - name: tool_choice
+        status: supported
+      - name: response_format
+        status: supported
+      - name: logprobs
+        status: unsupported
+        notes: OpenAI exposes logprobs only on the legacy /v1/completions endpoint.
+  capabilities:
+    - streaming
+    - tools
+    - vision
+    - response_format
+    - system_message
+    - temperature
+    - top_p
+    - max_tokens
+  models:
+    - id: gpt-4o
+      max_context_tokens: 128000
+      capabilities: [streaming, tools, vision, response_format]
+      region_hints: [us-east, eu-central]
+    - id: gpt-4o-mini
+      max_context_tokens: 128000
+      capabilities: [streaming, tools, response_format]
+      region_hints: [us-east, eu-central]
+  conformance:
+    required_checks:
+      - manifest-shape
+      - auth-defined
+      - compatibility-declared
+      - fields-coverage
+      - capability-enum
+      - models-unique
+      - sample-request-shape
+    sample_request:
+      model: gpt-4o-mini
+      messages:
+        - role: user
+          content: ping
+      max_tokens: 16
+    sample_response_shape:
+      choices:
+        - message:
+            role: assistant
+            content: string
+      usage:
+        prompt_tokens: int
+        completion_tokens: int

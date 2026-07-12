@@ -1,0 +1,78 @@
+{
+  "title": "FinOps 自治审批",
+  "toast": {
+    "loadFailed": "加载失败",
+    "approved": "已批准",
+    "approveFailed": "批准失败",
+    "rejectReasonRequired": "请填写拒绝原因",
+    "rejected": "已拒绝",
+    "rejectFailed": "拒绝失败",
+    "rollbackStarted": "已发起回滚",
+    "rollbackFailed": "回滚失败"
+  },
+  "error": {
+    "title": "无法加载 FinOps 审批数据"
+  },
+  "stateFilters": {
+    "all": "全部状态",
+    "proposed": "待审批",
+    "approved": "已批准",
+    "applied": "已应用",
+    "rejected": "已拒绝",
+    "rolledBack": "已回滚"
+  },
+  "sourceFilters": {
+    "all": "全部来源",
+    "costOptimizer": "成本优化",
+    "autoRecovery": "自愈",
+    "banditRouter": "智能路由",
+    "adaptiveGuard": "自适应防护",
+    "workflow": "工作流"
+  },
+  "kpi": {
+    "proposed": "待审批",
+    "applied": "累计已应用",
+    "savings24h": "估算 24h 节省"
+  },
+  "filter": {
+    "label": "过滤"
+  },
+  "topTable": {
+    "title": "本页 Top 5 估算节省决策",
+    "subject": "主题",
+    "state": "状态",
+    "savings24h": "估算节省 / 24h",
+    "affectedRps": "影响 RPS"
+  },
+  "empty": "当前筛选条件下没有提案。",
+  "card": {
+    "noSubject": "(无主题)",
+    "recommendedModel": "建议模型: ",
+    "savings": "估算节省: ",
+    "tenant": "租户: "
+  },
+  "pagination": {
+    "prev": "上一页",
+    "next": "下一页"
+  },
+  "drawer": {
+    "state": "状态",
+    "source": "来源",
+    "proposedAt": "提交时间",
+    "reviewer": "审阅人",
+    "rejectReason": "拒绝原因"
+  },
+  "actions": {
+    "approve": "批准",
+    "reject": "拒绝",
+    "rollback": "回滚"
+  },
+  "confirm": {
+    "approveTitle": "确认批准？",
+    "rejectTitle": "确认拒绝？",
+    "rollbackTitle": "确认回滚？",
+    "rollbackMessage": "此操作将立即调用 applier.rollback() 并写入审计。",
+    "defaultMessage": "此操作将立即对工作流生效。请确认决策依据已检查。"
+  },
+  "rejectReasonPlaceholder": "请输入拒绝原因..."
+}

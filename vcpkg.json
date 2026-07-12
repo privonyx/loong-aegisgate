@@ -1,0 +1,52 @@
+{
+  "name": "aegisgate",
+  "version": "1.0.0",
+  "builtin-baseline": "01f602195983451bc83e72f4214af2cbc495aa94",
+  "dependencies": [
+    "curl",
+    "drogon",
+    "nlohmann-json",
+    "spdlog",
+    "yaml-cpp",
+    "benchmark",
+    "gtest",
+    "re2",
+    "hnswlib",
+    "sqlite3"
+  ],
+  "features": {
+    "otel": {
+      "description": "OpenTelemetry distributed tracing (OTLP HTTP exporter)",
+      "dependencies": [
+        {
+          "name": "opentelemetry-cpp",
+          "features": [ "otlp-http" ]
+        }
+      ]
+    },
+    "redis": {
+      "description": "Redis cache backend (hiredis)",
+      "dependencies": [ "hiredis" ]
+    },
+    "pg": {
+      "description": "PostgreSQL persistent backend (libpq)",
+      "dependencies": [ "libpq" ]
+    },
+    "guard": {
+      "description": "ONNX guard model for safety classification",
+      "dependencies": [ "onnxruntime" ]
+    },
+    "guard-spm": {
+      "description": "SentencePiece tokenizer for DeBERTa-v3 guard model (ONNX runtime from third_party, so onnxruntime not pulled here)",
+      "dependencies": [ "sentencepiece" ]
+    },
+    "icu": {
+      "description": "Full ICU NFKC Unicode normalization",
+      "dependencies": [ "icu" ]
+    },
+    "control-plane": {
+      "description": "Control plane gRPC server + aegisctl config subcommands (Phase 9.3 MVP)",
+      "dependencies": [ "grpc", "protobuf" ]
+    }
+  }
+}

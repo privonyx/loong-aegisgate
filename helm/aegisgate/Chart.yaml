@@ -1,0 +1,14 @@
+apiVersion: v2
+name: aegisgate
+description: AegisGate AI Gateway — unified AI model proxy with security guardrails
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - ai-gateway
+  - llm-proxy
+  - security
+  - rate-limiting
+home: https://github.com/privonyx/loong-aegisgate
+sources:
+  - https://github.com/privonyx/loong-aegisgate

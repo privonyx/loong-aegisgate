@@ -1,0 +1,40 @@
+{
+  "title": "Prompt 模板管理",
+  "newTemplate": "新建模板",
+  "col": {
+    "name": "名称",
+    "version": "版本",
+    "weight": "权重",
+    "status": "状态",
+    "contentPreview": "内容预览",
+    "createdAt": "创建时间"
+  },
+  "status": {
+    "active": "启用",
+    "inactive": "停用"
+  },
+  "deleteDialog": {
+    "title": "删除模板",
+    "message": "确定要删除模板 \"{{name}}\" 吗？此操作不可撤销。"
+  },
+  "form": {
+    "createTitle": "新建模板",
+    "editTitle": "编辑模板",
+    "nameLabel": "名称 *",
+    "nameAria": "名称",
+    "contentLabel": "内容 *",
+    "contentAria": "内容",
+    "weightLabel": "权重",
+    "weightAria": "权重",
+    "activeLabel": "启用",
+    "submitCreate": "创建"
+  },
+  "toast": {
+    "loadFailed": "加载失败",
+    "deleted": "模板已删除",
+    "deleteFailed": "删除失败",
+    "updated": "模板已更新",
+    "created": "模板已创建",
+    "saveFailed": "保存失败"
+  }
+}

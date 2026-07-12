@@ -1,0 +1,60 @@
+# AI 漫剧场景护栏规则（合规引擎）
+# 复用 AegisGate 既有规则格式（regex_match / keyword_contains / length_check
+# + block / warn / modify），覆盖漫剧发布最致命的合规风险。
+# 部署：挂载到 AegisGate 的 config/rules/ 并在网关启用。
+version: 1
+rules:
+  - id: comic-block-graphic-violence
+    description: "拦截露骨暴力 / 血腥描写（漫剧下架高危）"
+    priority: 100
+    enabled: true
+    conditions:
+      - type: regex_match
+        value: "(?i)(血肉模糊|断肢|爆头|割喉|虐杀|血浆四溅|开膛|剜眼)"
+    action: block
+
+  - id: comic-block-adult-content
+    description: "拦截成人 / 色情内容"
+    priority: 100
+    enabled: true
+    conditions:
+      - type: regex_match
+        value: "(?i)(性行为|裸露|情色|床戏|性暗示露骨|淫秽)"
+    action: block
+
+  - id: comic-block-minor-harm
+    description: "拦截危害未成年内容（最高优先级红线）"
+    priority: 120
+    enabled: true
+    conditions:
+      - type: regex_match
+        value: "(?i)(未成年.{0,6}(性|裸|暴力)|儿童.{0,6}(色情|性))"
+    action: block
+
+  - id: comic-warn-sensitive-topic
+    description: "敏感话题（涉政 / 涉恐 / 自残）告警人工复核"
+    priority: 80
+    enabled: true
+    conditions:
+      - type: keyword_contains
+        value: "自杀教程"
+    action: warn
+
+  - id: comic-redact-pii
+    description: "脱敏疑似个人身份信息（手机号）"
+    priority: 70
+    enabled: true
+    conditions:
+      - type: regex_match
+        value: "(?<!\\d)1[3-9]\\d{9}(?!\\d)"
+    action: modify
+    action_param: "[已脱敏手机号]"
+
+  - id: comic-warn-overlong
+    description: "单次输入超长告警（批量生产防失控）"
+    priority: 50
+    enabled: true
+    conditions:
+      - type: length_check
+        value: "50000"
+    action: warn

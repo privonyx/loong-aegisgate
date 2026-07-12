@@ -1,0 +1,29 @@
+{
+  "refreshMode": {
+    "realtime": "实时更新（WebSocket）",
+    "polling": "每 15 秒自动刷新"
+  },
+  "kpi": {
+    "totalRequests": "总请求数",
+    "activeTenants": "活跃租户",
+    "totalCost": "总成本",
+    "cacheHitRate": "缓存命中率",
+    "savedRecent": "已节省（近30天）",
+    "savedDetailAria": "查看节省金额详情"
+  },
+  "charts": {
+    "requestTrend": "请求量趋势 (24h)",
+    "recentAudits": "最近审计事件",
+    "noAudits": "暂无审计事件",
+    "modelSavings": "模型节省金额分布（近30天）",
+    "noSavings": "暂无节省数据（聚合器自启动以来无事件）",
+    "securityEvents": "安全事件统计",
+    "securitySeverity": "（严重程度分级）",
+    "noSecurity": "暂无安全事件"
+  },
+  "security": {
+    "injection": "注入/拦截",
+    "normalized": "输入归一化",
+    "rateLimit": "速率限制"
+  }
+}

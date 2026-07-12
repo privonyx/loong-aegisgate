@@ -1,0 +1,70 @@
+apiVersion: aegisgate.dev/v1alpha1
+kind: ProviderManifest
+metadata:
+  name: deepseek
+  display_name: DeepSeek
+  vendor: DeepSeek AI
+  homepage: https://www.deepseek.com
+  documentation: https://platform.deepseek.com/api-docs
+  tags: [commercial, chat, tools, chinese, reasoning]
+  maturity: stable
+spec:
+  connector:
+    kind: openai
+  endpoint:
+    base_url_default: https://api.deepseek.com
+    base_url_env: DEEPSEEK_BASE_URL
+    timeout_ms_default: 60000
+    max_retries_default: 2
+  auth:
+    type: bearer
+    header_name: Authorization
+    env_var: DEEPSEEK_API_KEY
+    supports_multi_key: true
+  compatibility:
+    openai_chat_completions: full
+    fields:
+      - name: messages
+        status: supported
+      - name: tools
+        status: supported
+      - name: tool_choice
+        status: supported
+      - name: response_format
+        status: supported
+      - name: stream
+        status: supported
+      - name: logprobs
+        status: unsupported
+  capabilities:
+    - streaming
+    - tools
+    - response_format
+    - system_message
+    - temperature
+    - top_p
+    - max_tokens
+  models:
+    - id: deepseek-chat
+      max_context_tokens: 65536
+      capabilities: [streaming, tools, response_format]
+      region_hints: [ap-east]
+    - id: deepseek-reasoner
+      max_context_tokens: 65536
+      capabilities: [streaming, response_format]
+      region_hints: [ap-east]
+  conformance:
+    required_checks:
+      - manifest-shape
+      - auth-defined
+      - compatibility-declared
+      - fields-coverage
+      - capability-enum
+      - models-unique
+      - sample-request-shape
+    sample_request:
+      model: deepseek-chat
+      messages:
+        - role: user
+          content: ping
+      max_tokens: 16

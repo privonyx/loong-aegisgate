@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-border: var(--border-clr);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-accent: var(--accent);
+  --color-input: var(--input-bg);
+  --color-sidebar: var(--sidebar-bg);
+}
+
+:root {
+  --bg: hsl(222 47% 8%);
+  --card: hsl(222 30% 12%);
+  --border-clr: hsl(222 20% 18%);
+  --fg: hsl(210 40% 96%);
+  --muted: hsl(215 20% 55%);
+  --primary: hsl(210 100% 60%);
+  --success: hsl(142 71% 45%);
+  --warning: hsl(38 92% 50%);
+  --danger: hsl(0 84% 60%);
+  --accent: hsl(190 95% 50%);
+  --input-bg: hsl(222 25% 14%);
+  --sidebar-bg: hsl(222 35% 10%);
+}
+
+.light {
+  --bg: hsl(0 0% 98%);
+  --card: hsl(0 0% 100%);
+  --border-clr: hsl(220 13% 91%);
+  --fg: hsl(222 47% 11%);
+  --muted: hsl(215 16% 47%);
+  --primary: hsl(210 100% 50%);
+  --success: hsl(142 71% 35%);
+  --warning: hsl(38 92% 45%);
+  --danger: hsl(0 84% 50%);
+  --accent: hsl(190 95% 40%);
+  --input-bg: hsl(220 13% 95%);
+  --sidebar-bg: hsl(0 0% 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+@layer base {
+  input, select, textarea {
+    background: var(--input-bg);
+    border: 1px solid var(--border-clr);
+    color: var(--fg);
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--primary);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-clr);
+  border-radius: 3px;
+}

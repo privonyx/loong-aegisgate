@@ -1,0 +1,73 @@
+# Phase 9.3 — aegisgate-control-plane example configuration.
+#
+# Consumed by the `aegisgate-control-plane` binary. Fields not understood
+# by the control-plane binary (e.g. `pipeline:`, `routing:`) are simply
+# ignored, so operators MAY share this file with the data-plane `aegisgate`
+# binary during migration — but the reverse is NOT safe: a data-plane
+# config lacking the `control_plane:` and `tls:` blocks below will fail the
+# SR7 fail-closed guard on startup.
+#
+# Defaults are calibrated for a small team deployment. For larger fleets:
+#   * bump `control_plane.submit_rate_limit_per_user_per_min` above 10 only
+#     after auditing per-user submit patterns.
+#   * always enable `tls.mutual: true` before exposing port 9443 beyond a
+#     trusted admin VLAN.
+#   * rotate the fingerprint allow-list any time an operator laptop is lost.
+
+edition: enterprise   # required: SR1 needs FeatureGate::RBAC
+
+# --- Persistent store (shared with data plane) -------------------------------
+storage:
+  # Options: "sqlite" (default), "postgres".
+  persistent_backend: sqlite
+  sqlite:
+    path: /var/lib/aegisgate/control-plane.sqlite
+    wal: true
+
+  # postgres:
+  #   url: "postgres://aegisgate:***@db.internal:5432/aegisgate"
+  #   pool_size: 8
+  #   connect_timeout_ms: 5000
+
+# --- TLS / mTLS --------------------------------------------------------------
+# Both `cert_file` and `key_file` are MANDATORY — the server refuses to start
+# if either is missing (SR7 fail-closed). No knob disables TLS on purpose.
+tls:
+  cert_path: /etc/aegisgate/certs/control-plane.crt
+  key_path:  /etc/aegisgate/certs/control-plane.key
+
+  # Set to true to require client certificates. When enabled, every client
+  # certificate presented by aegisctl must either (a) chain to a CA the
+  # gRPC runtime trusts AND (b) if the allow-list below is non-empty, the
+  # cert's SHA-256 fingerprint must appear in it. Empty list = "accept any
+  # client cert the CA trust store accepts".
+  mutual: false
+
+  # Optional SHA-256 fingerprints (lowercase hex, no colons). Example:
+  # allowed_client_fingerprints_sha256:
+  #   - "3f2c7a9b4d5e1f6a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a"
+  allowed_client_fingerprints_sha256: []
+
+# --- Control-plane gRPC server ----------------------------------------------
+control_plane:
+  # Listen address for the gRPC surface. Keep off 0.0.0.0 in production —
+  # bind to the admin VLAN interface or a loopback reached via SSH tunnel.
+  server:
+    listen_address: "0.0.0.0:9443"
+
+  # SR10 — per-user submit rate limit (tokens/minute). The bucket is keyed
+  # by Bearer-resolved user_id. Default of 10/min is deliberately tight to
+  # disincentivise robotic CI pipelines from flooding PENDING history.
+  submit_rate_limit_per_user_per_min: 10
+
+  # SR2 / transport — 1 MiB cap, applied simultaneously in core and in the
+  # gRPC receive-buffer. Do not raise without raising the matching
+  # ServerBootstrap default in the same commit.
+  max_yaml_size_bytes: 1048576
+
+  # Q5 — first-start bootstrap. If `config_versions` is empty on startup,
+  # the binary reads this file, submits it as the initial ACTIVE version
+  # under the synthetic actor `system_bootstrap`, and records the
+  # transition in the audit chain. Subsequent starts see a non-empty table
+  # and skip the bootstrap entirely. Leave blank to skip bootstrap.
+  bootstrap_from_active_yaml: ""

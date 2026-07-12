@@ -1,0 +1,326 @@
+// control_plane.proto — AegisGate Control Plane v1 API contract.
+//
+// Phase 9.3 MVP (TASK-20260420-01): stable gRPC surface for ConfigBundle
+// versioning with W3 dual-approval workflow. Consumers include aegisctl,
+// future K8s Operator (Phase 9.4), Argo CD integration (9.3.3), and any
+// first-party sidecar registration flow.
+//
+// Stability: aegisgate.controlplane.v1 is considered stable once merged.
+// New fields must be append-only; enum values may only be appended.
+// Breaking changes require a v2 package.
+
+syntax = "proto3";
+
+package aegisgate.controlplane.v1;
+
+option cc_enable_arenas = true;
+option go_package = "github.com/privonyx/loong-aegisgate/api/control-plane/v1;controlplane";
+
+// ---------------------------------------------------------------------------
+// Core value objects
+// ---------------------------------------------------------------------------
+
+// Lifecycle of a ConfigBundle (entire aegisgate.yaml snapshot).
+//
+// Transitions (W3 dual-approval, submitter != reviewer):
+//   PENDING    -- approve  --> APPROVED
+//   PENDING    -- reject   --> REJECTED          (terminal)
+//   APPROVED   -- reject   --> REJECTED          (terminal)
+//   APPROVED   -- activate --> ACTIVE            (previous ACTIVE -> SUPERSEDED)
+//   ACTIVE     -- rollback-to an older ACTIVE -> remains ACTIVE idempotently
+//   SUPERSEDED -- rollback-to --> ACTIVE          (R2 exemption)
+enum ConfigStatus {
+  CONFIG_STATUS_UNSPECIFIED = 0;
+  CONFIG_STATUS_PENDING     = 1;  // immediately after SubmitVersion
+  CONFIG_STATUS_APPROVED    = 2;  // approved by a different reviewer, not yet live
+  CONFIG_STATUS_REJECTED    = 3;  // terminal
+  CONFIG_STATUS_ACTIVE      = 4;  // currently serving traffic (at most one)
+  CONFIG_STATUS_SUPERSEDED  = 5;  // was ACTIVE, replaced by a newer version
+}
+
+// Representation of a single versioned aegisgate.yaml bundle.
+message ConfigVersion {
+  // ------------------------------------------------------------------------
+  // Immutable identity fields (set by SubmitVersion)
+  // ------------------------------------------------------------------------
+  string version_id = 1;           // ULID, 26 chars (time-ordered + 80-bit random)
+  int64  submitted_at = 2;         // Unix epoch milliseconds
+  string submitter = 3;            // SuperAdmin API Key user_id
+  string submitter_comment = 4;    // free text, up to 4096 bytes
+  bytes  yaml_content = 5;         // raw aegisgate.yaml bytes (may be empty in list views, SR11)
+  string content_sha256 = 6;       // hex-encoded SHA-256 of yaml_content
+  int64  size_bytes = 7;           // redundant with len(yaml_content), convenient for list views
+
+  // ------------------------------------------------------------------------
+  // Approval fields (W3)
+  // ------------------------------------------------------------------------
+  ConfigStatus status = 10;
+  string       reviewer = 11;         // user_id who Approved or Rejected
+  int64        reviewed_at = 12;      // Unix millis
+  string       reviewer_comment = 13;
+
+  // ------------------------------------------------------------------------
+  // Activation fields
+  // ------------------------------------------------------------------------
+  string activator = 20;
+  int64  activated_at = 21;
+  int64  deactivated_at = 22;      // set when this version becomes SUPERSEDED
+
+  // ------------------------------------------------------------------------
+  // Audit chain (C3 decision: share AuditLogger chain_hash)
+  // ------------------------------------------------------------------------
+  string chain_hash = 30;          // hex-encoded chain hash of the audit entry
+}
+
+// Diff output format requested by DiffVersions.
+enum DiffFormat {
+  DIFF_FORMAT_UNSPECIFIED    = 0;
+  DIFF_FORMAT_UNIFIED        = 1;  // default, `diff -u` style text
+  DIFF_FORMAT_SEMANTIC_YAML  = 2;  // MVP: reserved; server returns unified_diff only
+}
+
+// Change type for a semantic YAML diff entry.
+enum ChangeType {
+  CHANGE_TYPE_UNSPECIFIED = 0;
+  CHANGE_TYPE_ADDED       = 1;
+  CHANGE_TYPE_MODIFIED    = 2;
+  CHANGE_TYPE_REMOVED     = 3;
+}
+
+// A single semantic-level YAML change (only populated when SEMANTIC_YAML
+// becomes supported in a future release).
+message SemanticChange {
+  string     yaml_path = 1;        // e.g. "security.injection_patterns[3]"
+  ChangeType type = 2;
+  string     old_value = 3;        // serialized YAML scalar
+  string     new_value = 4;
+}
+
+// ---------------------------------------------------------------------------
+// Read RPCs
+// ---------------------------------------------------------------------------
+
+message ListVersionsRequest {
+  repeated ConfigStatus statuses = 1;  // empty = all statuses
+  int64                 since_millis = 2;  // 0 = unbounded
+  int32                 page_size = 3;     // default 50, capped at 500 server-side
+  string                page_token = 4;    // opaque cursor from previous response
+}
+
+message ListVersionsResponse {
+  // yaml_content is cleared per-row for safety (SR11); use GetVersion to fetch.
+  repeated ConfigVersion versions = 1;
+  string                 next_page_token = 2;
+}
+
+message GetVersionRequest {
+  string version_id = 1;
+}
+
+message GetActiveRequest {
+  // Intentionally empty; reserved for future filter fields.
+}
+
+message DiffVersionsRequest {
+  string     from_version_id = 1;
+  string     to_version_id = 2;
+  DiffFormat format = 3;           // default treated as UNIFIED
+}
+
+message DiffVersionsResponse {
+  string                  unified_diff = 1;  // `diff -u` compatible text
+  repeated SemanticChange changes = 2;        // only populated when SEMANTIC_YAML implemented
+}
+
+// ---------------------------------------------------------------------------
+// Write RPCs (all require SuperAdmin role; W3 enforces submitter != reviewer)
+// ---------------------------------------------------------------------------
+
+message SubmitVersionRequest {
+  bytes  yaml_content = 1;
+  string submitter_comment = 2;
+  bool   validate_only = 3;        // true = run validation + diff but do not persist
+}
+
+message ApproveVersionRequest {
+  string version_id = 1;
+  string reviewer_comment = 2;
+}
+
+message RejectVersionRequest {
+  string version_id = 1;
+  string reviewer_comment = 2;
+}
+
+message ActivateVersionRequest {
+  string version_id = 1;
+  string activation_comment = 2;
+}
+
+message RollbackVersionRequest {
+  string target_version_id = 1;    // must be ACTIVE or SUPERSEDED (R2 exemption)
+  string rollback_comment = 2;
+  // MVP (R3 placeholder): emergency=true is rejected with EMERGENCY_NOT_IMPLEMENTED.
+  // Full emergency bypass is deferred to Phase 12.
+  bool   emergency = 3;
+}
+
+// ---------------------------------------------------------------------------
+// Service
+// ---------------------------------------------------------------------------
+
+service ConfigService {
+  // --- Read ---
+  rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse);
+  rpc GetVersion(GetVersionRequest)     returns (ConfigVersion);
+  rpc GetActive(GetActiveRequest)       returns (ConfigVersion);
+  rpc DiffVersions(DiffVersionsRequest) returns (DiffVersionsResponse);
+
+  // --- Write (SuperAdmin required; W3 dual-approval enforced) ---
+  rpc SubmitVersion(SubmitVersionRequest)     returns (ConfigVersion);
+  rpc ApproveVersion(ApproveVersionRequest)   returns (ConfigVersion);
+  rpc RejectVersion(RejectVersionRequest)     returns (ConfigVersion);
+  rpc ActivateVersion(ActivateVersionRequest) returns (ConfigVersion);
+  rpc RollbackVersion(RollbackVersionRequest) returns (ConfigVersion);
+}
+
+// ===========================================================================
+// Phase 9.3.4 RolloutService (TASK-20260422-01)
+//
+// Regional / tenant / percentage canary rollouts of APPROVED ConfigVersions
+// with metrics-driven auto-pause (FeedbackBus router.outcome) and grace-timeout
+// auto-rollback. Entirely append-only — ConfigService surface unchanged.
+//
+// State machine (enforced server-side):
+//   PENDING     -- Start    --> PROGRESSING
+//   PROGRESSING -- Promote(non-last) --> PROGRESSING (stage advance)
+//   PROGRESSING -- Promote(last)     --> COMPLETED   (terminal; target activated)
+//   PROGRESSING -- Pause     --> PAUSED
+//   PROGRESSING -- Abort     --> ABORTED             (previous active restored)
+//   PAUSED      -- Resume    --> PROGRESSING
+//   PAUSED      -- <grace-timeout> --> FAILED        (auto-rollback; SR17 gated)
+//   PAUSED      -- Abort     --> ABORTED
+//
+// Security: SR1 (SuperAdmin), SR5 (external user identity), SR8 (err msg
+// minimalism), SR10 (audit chain), SR11 (list omits payload), SR13-17 (new).
+// ===========================================================================
+
+enum RolloutStatus {
+  ROLLOUT_STATUS_UNSPECIFIED = 0;
+  ROLLOUT_STATUS_PENDING     = 1;
+  ROLLOUT_STATUS_PROGRESSING = 2;
+  ROLLOUT_STATUS_PAUSED      = 3;
+  ROLLOUT_STATUS_COMPLETED   = 4;  // terminal; target_version_id became ACTIVE
+  ROLLOUT_STATUS_FAILED      = 5;  // terminal; auto-rollback completed
+  ROLLOUT_STATUS_ABORTED     = 6;  // terminal; operator abort
+}
+
+enum PauseReason {
+  PAUSE_REASON_UNSPECIFIED   = 0;
+  PAUSE_REASON_MANUAL        = 1;
+  PAUSE_REASON_ERROR_RATE    = 2;
+  PAUSE_REASON_LATENCY_RATIO = 3;
+  PAUSE_REASON_AUTO_ROLLBACK = 4;
+}
+
+// Selector describing which requests a stage applies to.
+// Empty selector = match all (100% rollout within the stage).
+// Semantics: tenant_globs AND regions AND percentage-bucket (all must hold).
+message ScopeSelector {
+  repeated string tenant_globs = 1;  // fnmatch-style globs on tenant_id
+  repeated string regions      = 2;  // exact match on RequestContext.region
+  int32           percentage   = 3;  // 0..100 consistent-hash bucket on sticky_key
+}
+
+// Gate to advance beyond the current stage: both duration and sample floor
+// must be satisfied before auto-pause decisions may fire.
+message ObservationPolicy {
+  int32 min_duration_seconds = 1;
+  int32 min_sample_count     = 2;
+}
+
+// Thresholds that, once exceeded, trigger automatic pause.
+// Relative thresholds compare target against previous active; absolute
+// thresholds protect against pathological baselines (design §CR1).
+message AutoPausePolicy {
+  double error_rate_gt              = 1;  // relative: target - baseline
+  double p99_latency_ratio_gt       = 2;  // relative: target/baseline
+  double absolute_error_rate_gt     = 3;  // safety net
+  double absolute_p99_latency_ms_gt = 4;  // safety net
+}
+
+message RolloutStage {
+  string            name        = 1;
+  ScopeSelector     scope       = 2;
+  ObservationPolicy observation = 3;
+  AutoPausePolicy   auto_pause  = 4;
+}
+
+// Immutable user-supplied rollout specification.
+message RolloutSpec {
+  string                target_version_id           = 1;  // must be APPROVED
+  repeated RolloutStage stages                      = 2;  // >= 1; executed in order
+  string                sticky_key                  = 3;  // "tenant_id"|"user_id"
+  bool                  auto_rollback_on_pause      = 4;
+  int32                 auto_rollback_grace_seconds = 5;  // default 1800 server-side
+  string                creator_comment             = 6;
+}
+
+// Server-maintained rollout state, returned by every Rollout* RPC.
+message Rollout {
+  string        rollout_id                  = 1;  // ULID
+  string        target_version_id           = 2;
+  string        previous_active_version_id  = 3;  // set on Start; restored on Abort/Fail
+  RolloutSpec   spec                        = 4;
+
+  RolloutStatus status                      = 10;
+  int32         current_stage_index         = 11;
+  int64         started_at                  = 12; // unix ms; 0 until Started
+  int64         stage_started_at            = 13; // resets on stage advance / Resume
+  int64         paused_at                   = 14; // 0 unless status==PAUSED
+  PauseReason   pause_reason                = 15;
+  string        pause_detail                = 16; // human-readable summary (SR8)
+
+  string        creator                     = 20;
+  string        last_actor                  = 21;
+  int64         completed_at                = 22; // unix ms; terminal states only
+
+  string        chain_hash                  = 30; // audit chain head at mutation time
+}
+
+// ---------------------------------------------------------------------------
+// Request / response wrappers
+// ---------------------------------------------------------------------------
+
+message CreateRolloutRequest  { RolloutSpec spec = 1; }
+message GetRolloutRequest     { string rollout_id = 1; }
+
+message ListRolloutsRequest {
+  repeated RolloutStatus statuses   = 1;  // empty = all
+  int32                  page_size  = 2;  // default 50, capped at 500
+  string                 page_token = 3;
+}
+message ListRolloutsResponse {
+  repeated Rollout rollouts        = 1;
+  string           next_page_token = 2;
+}
+
+message StartRolloutRequest   { string rollout_id = 1; string comment = 2; }
+message PauseRolloutRequest   { string rollout_id = 1; string comment = 2; }
+message ResumeRolloutRequest  { string rollout_id = 1; string comment = 2; }
+message PromoteRolloutRequest { string rollout_id = 1; string comment = 2; }
+message AbortRolloutRequest   { string rollout_id = 1; string comment = 2; }
+
+service RolloutService {
+  // --- Read (SuperAdmin required) ---
+  rpc GetRollout   (GetRolloutRequest)   returns (Rollout);
+  rpc ListRollouts (ListRolloutsRequest) returns (ListRolloutsResponse);
+
+  // --- Write (SuperAdmin; SR1 + SR13-17; audit chain via SR14) ---
+  rpc CreateRollout  (CreateRolloutRequest)  returns (Rollout);
+  rpc StartRollout   (StartRolloutRequest)   returns (Rollout);
+  rpc PauseRollout   (PauseRolloutRequest)   returns (Rollout);
+  rpc ResumeRollout  (ResumeRolloutRequest)  returns (Rollout);
+  rpc PromoteRollout (PromoteRolloutRequest) returns (Rollout);
+  rpc AbortRollout   (AbortRolloutRequest)   returns (Rollout);
+}

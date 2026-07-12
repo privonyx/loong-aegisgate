@@ -1,0 +1,912 @@
+openapi: 3.0.3
+
+info:
+  title: AegisGate Control Plane API
+  version: v1
+  description: |
+    HTTP-friendly view of the `aegisgate.controlplane.v1` gRPC service defined
+    in `proto/control_plane/v1/control_plane.proto`.
+
+    **Canonical contract.** The proto file is the source of truth. This OpenAPI
+    document is hand-written and kept aligned via
+    `scripts/verify-openapi-sync.sh` which CI runs on every control-plane PR.
+
+    **Transport.** The production surface is gRPC over TLS (and optionally mTLS)
+    on port 9443 (configurable). This OpenAPI is provided for documentation
+    tooling (Swagger UI, stoplight, API catalogs). **No HTTP gateway ships in
+    Phase 9.3** — there is currently no server serving these paths. The RPC
+    names and paths here follow the idiomatic gRPC-to-REST mapping so that a
+    future gRPC-gateway or Envoy HTTP→gRPC transcoding can drop in without
+    breaking documentation references.
+
+    **Auth (SR8).** The Bearer API Key MUST be provided via the
+    `AEGISGATE_CP_API_KEY` environment variable, never on the command line or
+    URL. mTLS is an orthogonal transport-layer requirement; when enabled
+    operators configure `allowed_client_fingerprints_sha256` in the server
+    config. See `docs/guides/control-plane.md` for operational guidance.
+
+    **Size cap (SR2).** `yaml_content` is capped at 1 MiB in both the core
+    service and the gRPC receive buffer.
+
+    **Rate limit (SR10).** Write RPCs are subject to a per-user submit token
+    bucket (default 10/min), keyed by the Bearer-resolved `user_id`.
+  contact:
+    name: AegisGate maintainers
+    url: https://github.com/privonyx/loong-aegisgate
+  license:
+    name: Apache-2.0
+
+servers:
+  - url: https://control-plane.internal:9443
+    description: Production admin VLAN (example)
+
+security:
+  - BearerApiKey: []
+
+tags:
+  - name: read
+    description: Safe, idempotent queries against the ConfigBundle history.
+  - name: write
+    description: |
+      Lifecycle mutations. All require `SuperAdmin` role and enforce the W3
+      dual-approval rule (submitter MUST NOT be the approver).
+  - name: rollout-read
+    description: Read-only rollout queries (SuperAdmin required).
+  - name: rollout-write
+    description: |
+      Rollout lifecycle mutations. All require `SuperAdmin` role.
+      SR1 + SR13-17 enforced; audit chain via SR14.
+
+paths:
+  /v1/config/list:
+    post:
+      tags: [read]
+      summary: List ConfigBundle versions (`ListVersions`)
+      operationId: listVersions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListVersionsRequest'
+      responses:
+        '200':
+          description: Page of versions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListVersionsResponse'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
+
+  /v1/config/get:
+    post:
+      tags: [read]
+      summary: Fetch a single version with full `yaml_content` (`GetVersion`)
+      operationId: getVersion
+      description: |
+        Returns the full `ConfigVersion`, including `yaml_content`. Consumers
+        that only need metadata should prefer `ListVersions`, whose rows clear
+        `yaml_content` per SR11.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetVersionRequest'
+      responses:
+        '200':
+          description: Matching version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigVersion'
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/config/current:
+    post:
+      tags: [read]
+      summary: Fetch the current ACTIVE version (`GetActive`)
+      operationId: getActive
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetActiveRequest'
+      responses:
+        '200':
+          description: Current ACTIVE version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigVersion'
+        '404':
+          description: No ACTIVE version exists yet (bootstrap pending)
+
+  /v1/config/diff:
+    post:
+      tags: [read]
+      summary: Compute the diff between two versions (`DiffVersions`)
+      operationId: diffVersions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiffVersionsRequest'
+      responses:
+        '200':
+          description: Unified text diff (semantic diff reserved for a future release)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiffVersionsResponse'
+
+  /v1/config/submit:
+    post:
+      tags: [write]
+      summary: Submit a new candidate version (`SubmitVersion`)
+      operationId: submitVersion
+      description: |
+        Creates a new `ConfigBundle` in status `PENDING`. The submitter is
+        resolved from the Bearer API Key. Set `validate_only=true` to run
+        validation + diff without persisting.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitVersionRequest'
+      responses:
+        '200':
+          description: Newly created (or validated) version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigVersion'
+        '400':
+          description: Payload rejected (size cap, validation, or SR4 sensitive value)
+        '429':
+          description: Per-user submit rate limit exceeded (SR10)
+
+  /v1/config/approve:
+    post:
+      tags: [write]
+      summary: Approve a PENDING version (`ApproveVersion`)
+      operationId: approveVersion
+      description: |
+        Transitions `PENDING → APPROVED`. The reviewer MUST NOT be the same
+        `user_id` as the submitter (SR5).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveVersionRequest'
+      responses:
+        '200':
+          description: Updated version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigVersion'
+        '409':
+          description: Submitter == reviewer (SR5), or invalid state transition
+
+  /v1/config/reject:
+    post:
+      tags: [write]
+      summary: Reject a PENDING or APPROVED version (`RejectVersion`)
+      operationId: rejectVersion
+      description: |
+        Transitions `{PENDING,APPROVED} → REJECTED` (terminal). Subject to the
+        same submitter ≠ reviewer guard (SR5).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectVersionRequest'
+      responses:
+        '200':
+          description: Updated version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigVersion'
+
+  /v1/config/activate:
+    post:
+      tags: [write]
+      summary: Promote an APPROVED version to ACTIVE (`ActivateVersion`)
+      operationId: activateVersion
+      description: |
+        Transitions `APPROVED → ACTIVE`. The previously ACTIVE version (if any)
+        becomes `SUPERSEDED`. The data-plane still needs to be notified
+        out-of-band (CLI writes the yaml target file atomically and sends
+        SIGHUP).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateVersionRequest'
+      responses:
+        '200':
+          description: Updated version (status ACTIVE)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigVersion'
+
+  /v1/config/rollback:
+    post:
+      tags: [write]
+      summary: Rollback to a historical version (`RollbackVersion`)
+      operationId: rollbackVersion
+      description: |
+        Promotes a previously `ACTIVE` (now `SUPERSEDED`) version back to
+        `ACTIVE` without re-running the approval workflow (R2 exemption). The
+        `emergency` flag is reserved for a future emergency bypass (currently
+        rejected with `EMERGENCY_NOT_IMPLEMENTED`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RollbackVersionRequest'
+      responses:
+        '200':
+          description: Updated version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigVersion'
+        '501':
+          description: Emergency bypass requested but not implemented yet (Phase 12)
+
+  # -----------------------------------------------------------------------
+  # RolloutService — Phase 9.3.4
+  # -----------------------------------------------------------------------
+
+  /v1/rollout/create:
+    post:
+      tags: [rollout-write]
+      summary: Create a new rollout (`CreateRollout`)
+      operationId: createRollout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRolloutRequest'
+      responses:
+        '200':
+          description: Newly created rollout in PENDING status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rollout'
+        '400': { description: Invalid spec (missing target_version_id, empty stages, etc.) }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
+        '429': { description: Tenant rollout quota exceeded (SR16) }
+
+  /v1/rollout/get:
+    post:
+      tags: [rollout-read]
+      summary: Get rollout by ID (`GetRollout`)
+      operationId: getRollout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetRolloutRequest'
+      responses:
+        '200':
+          description: Rollout details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rollout'
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/rollout/list:
+    post:
+      tags: [rollout-read]
+      summary: List rollouts (`ListRollouts`)
+      operationId: listRollouts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListRolloutsRequest'
+      responses:
+        '200':
+          description: Page of rollouts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListRolloutsResponse'
+
+  /v1/rollout/start:
+    post:
+      tags: [rollout-write]
+      summary: Start a PENDING rollout (`StartRollout`)
+      operationId: startRollout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartRolloutRequest'
+      responses:
+        '200':
+          description: Rollout transitioned to PROGRESSING
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rollout'
+        '409': { description: Invalid state transition }
+
+  /v1/rollout/pause:
+    post:
+      tags: [rollout-write]
+      summary: Manually pause a PROGRESSING rollout (`PauseRollout`)
+      operationId: pauseRollout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PauseRolloutRequest'
+      responses:
+        '200':
+          description: Rollout transitioned to PAUSED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rollout'
+
+  /v1/rollout/resume:
+    post:
+      tags: [rollout-write]
+      summary: Resume a PAUSED rollout (`ResumeRollout`)
+      operationId: resumeRollout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResumeRolloutRequest'
+      responses:
+        '200':
+          description: Rollout transitioned back to PROGRESSING
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rollout'
+
+  /v1/rollout/promote:
+    post:
+      tags: [rollout-write]
+      summary: Advance to the next stage (`PromoteRollout`)
+      operationId: promoteRollout
+      description: |
+        Advances the rollout to the next stage. If the current stage is the
+        last, the rollout transitions to COMPLETED and the target version
+        becomes ACTIVE.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoteRolloutRequest'
+      responses:
+        '200':
+          description: Rollout advanced (or completed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rollout'
+
+  /v1/rollout/abort:
+    post:
+      tags: [rollout-write]
+      summary: Abort a rollout and restore previous active (`AbortRollout`)
+      operationId: abortRollout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbortRolloutRequest'
+      responses:
+        '200':
+          description: Rollout aborted; previous active version restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rollout'
+
+components:
+  securitySchemes:
+    BearerApiKey:
+      type: http
+      scheme: bearer
+      description: |
+        Opaque API key for a SuperAdmin user. Clients MUST read it from the
+        `AEGISGATE_CP_API_KEY` environment variable (SR8). The key never
+        appears on command lines or in URLs.
+
+  responses:
+    Unauthenticated:
+      description: Missing or malformed Bearer token
+    PermissionDenied:
+      description: Token resolved but the user lacks `SuperAdmin`
+    NotFound:
+      description: Version ID does not exist
+
+  schemas:
+    # -----------------------------------------------------------------------
+    # Enums
+    # -----------------------------------------------------------------------
+    ConfigStatus:
+      type: string
+      description: ConfigBundle lifecycle status. Mirrors proto enum; values.
+      enum:
+        - CONFIG_STATUS_UNSPECIFIED
+        - CONFIG_STATUS_PENDING
+        - CONFIG_STATUS_APPROVED
+        - CONFIG_STATUS_REJECTED
+        - CONFIG_STATUS_ACTIVE
+        - CONFIG_STATUS_SUPERSEDED
+
+    DiffFormat:
+      type: string
+      enum:
+        - DIFF_FORMAT_UNSPECIFIED
+        - DIFF_FORMAT_UNIFIED
+        - DIFF_FORMAT_SEMANTIC_YAML
+
+    ChangeType:
+      type: string
+      enum:
+        - CHANGE_TYPE_UNSPECIFIED
+        - CHANGE_TYPE_ADDED
+        - CHANGE_TYPE_MODIFIED
+        - CHANGE_TYPE_REMOVED
+
+    # -----------------------------------------------------------------------
+    # Core value objects
+    # -----------------------------------------------------------------------
+    ConfigVersion:
+      type: object
+      description: |
+        Single versioned aegisgate.yaml bundle. Fields group into identity,
+        approval (W3), activation, and audit.
+      properties:
+        version_id:
+          type: string
+          description: ULID, 26 chars (time-ordered + 80-bit random).
+          example: 01HZ2J5Q7T8K9M4N6P3R5S2V4W
+        submitted_at:
+          type: integer
+          format: int64
+          description: Unix epoch milliseconds.
+        submitter:
+          type: string
+          description: SuperAdmin API Key user_id that created this version.
+        submitter_comment:
+          type: string
+          maxLength: 4096
+        yaml_content:
+          type: string
+          format: byte
+          description: |
+            Raw aegisgate.yaml bytes, base64-encoded for JSON transport.
+            Cleared in `ListVersions` rows per SR11.
+        content_sha256:
+          type: string
+          description: Hex-encoded SHA-256 of `yaml_content`.
+        size_bytes:
+          type: integer
+          format: int64
+          description: |
+            Byte length of `yaml_content`. Redundant but convenient in list
+            views where `yaml_content` is empty.
+        status:
+          $ref: '#/components/schemas/ConfigStatus'
+        reviewer:
+          type: string
+          description: user_id who Approved or Rejected.
+        reviewed_at:
+          type: integer
+          format: int64
+        reviewer_comment:
+          type: string
+        activator:
+          type: string
+        activated_at:
+          type: integer
+          format: int64
+        deactivated_at:
+          type: integer
+          format: int64
+          description: Set when this version becomes SUPERSEDED.
+        chain_hash:
+          type: string
+          description: Hex-encoded chain hash of the audit entry (SR via C3).
+
+    SemanticChange:
+      type: object
+      description: |
+        Single semantic-level YAML change. Only populated when `SEMANTIC_YAML`
+        diff format is supported (reserved; MVP returns unified_diff only).
+      properties:
+        yaml_path:
+          type: string
+          example: "security.injection_patterns[3]"
+        type:
+          $ref: '#/components/schemas/ChangeType'
+        old_value:
+          type: string
+          description: Serialized YAML scalar.
+        new_value:
+          type: string
+
+    # -----------------------------------------------------------------------
+    # Read RPCs
+    # -----------------------------------------------------------------------
+    ListVersionsRequest:
+      type: object
+      properties:
+        statuses:
+          type: array
+          description: Empty = all statuses.
+          items:
+            $ref: '#/components/schemas/ConfigStatus'
+        since_millis:
+          type: integer
+          format: int64
+          description: 0 = unbounded.
+        page_size:
+          type: integer
+          format: int32
+          description: Default 50, capped at 500 server-side.
+        page_token:
+          type: string
+          description: Opaque cursor from a previous response.
+
+    ListVersionsResponse:
+      type: object
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConfigVersion'
+          description: |
+            yaml_content is cleared per-row for safety (SR11). Use GetVersion
+            to fetch the body.
+        next_page_token:
+          type: string
+
+    GetVersionRequest:
+      type: object
+      required: [version_id]
+      properties:
+        version_id:
+          type: string
+
+    GetActiveRequest:
+      type: object
+      description: Intentionally empty; reserved for future filter fields.
+
+    DiffVersionsRequest:
+      type: object
+      required: [from_version_id, to_version_id]
+      properties:
+        from_version_id:
+          type: string
+        to_version_id:
+          type: string
+        format:
+          $ref: '#/components/schemas/DiffFormat'
+
+    DiffVersionsResponse:
+      type: object
+      properties:
+        unified_diff:
+          type: string
+          description: '`diff -u` compatible text (MVP default).'
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SemanticChange'
+          description: Only populated when SEMANTIC_YAML is implemented.
+
+    # -----------------------------------------------------------------------
+    # Write RPCs
+    # -----------------------------------------------------------------------
+    SubmitVersionRequest:
+      type: object
+      required: [yaml_content]
+      properties:
+        yaml_content:
+          type: string
+          format: byte
+          description: Raw aegisgate.yaml bytes (base64 over JSON). Max 1 MiB (SR2).
+        submitter_comment:
+          type: string
+          maxLength: 4096
+        validate_only:
+          type: boolean
+          description: true = run validation + diff but do not persist.
+
+    ApproveVersionRequest:
+      type: object
+      required: [version_id]
+      properties:
+        version_id:
+          type: string
+        reviewer_comment:
+          type: string
+
+    RejectVersionRequest:
+      type: object
+      required: [version_id]
+      properties:
+        version_id:
+          type: string
+        reviewer_comment:
+          type: string
+
+    ActivateVersionRequest:
+      type: object
+      required: [version_id]
+      properties:
+        version_id:
+          type: string
+        activation_comment:
+          type: string
+
+    RollbackVersionRequest:
+      type: object
+      required: [target_version_id]
+      properties:
+        target_version_id:
+          type: string
+          description: Must be ACTIVE or SUPERSEDED (R2 exemption).
+        rollback_comment:
+          type: string
+        emergency:
+          type: boolean
+          description: |
+            Reserved; MVP rejects with `EMERGENCY_NOT_IMPLEMENTED`. Full
+            emergency bypass is deferred to Phase 12.
+
+    # -----------------------------------------------------------------------
+    # Rollout enums (Phase 9.3.4)
+    # -----------------------------------------------------------------------
+    RolloutStatus:
+      type: string
+      enum:
+        - ROLLOUT_STATUS_UNSPECIFIED
+        - ROLLOUT_STATUS_PENDING
+        - ROLLOUT_STATUS_PROGRESSING
+        - ROLLOUT_STATUS_PAUSED
+        - ROLLOUT_STATUS_COMPLETED
+        - ROLLOUT_STATUS_FAILED
+        - ROLLOUT_STATUS_ABORTED
+
+    PauseReason:
+      type: string
+      enum:
+        - PAUSE_REASON_UNSPECIFIED
+        - PAUSE_REASON_MANUAL
+        - PAUSE_REASON_ERROR_RATE
+        - PAUSE_REASON_LATENCY_RATIO
+        - PAUSE_REASON_AUTO_ROLLBACK
+
+    # -----------------------------------------------------------------------
+    # Rollout value objects
+    # -----------------------------------------------------------------------
+    ScopeSelector:
+      type: object
+      properties:
+        tenant_globs:
+          type: array
+          items: { type: string }
+        regions:
+          type: array
+          items: { type: string }
+        percentage:
+          type: integer
+          format: int32
+
+    ObservationPolicy:
+      type: object
+      properties:
+        min_duration_seconds:
+          type: integer
+          format: int32
+        min_sample_count:
+          type: integer
+          format: int32
+
+    AutoPausePolicy:
+      type: object
+      properties:
+        error_rate_gt:
+          type: number
+          format: double
+        p99_latency_ratio_gt:
+          type: number
+          format: double
+        absolute_error_rate_gt:
+          type: number
+          format: double
+        absolute_p99_latency_ms_gt:
+          type: number
+          format: double
+
+    RolloutStage:
+      type: object
+      properties:
+        name:
+          type: string
+        scope:
+          $ref: '#/components/schemas/ScopeSelector'
+        observation:
+          $ref: '#/components/schemas/ObservationPolicy'
+        auto_pause:
+          $ref: '#/components/schemas/AutoPausePolicy'
+
+    RolloutSpec:
+      type: object
+      required: [target_version_id, stages]
+      properties:
+        target_version_id:
+          type: string
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolloutStage'
+        sticky_key:
+          type: string
+          description: '"tenant_id" or "user_id"'
+        auto_rollback_on_pause:
+          type: boolean
+        auto_rollback_grace_seconds:
+          type: integer
+          format: int32
+        creator_comment:
+          type: string
+
+    Rollout:
+      type: object
+      properties:
+        rollout_id:
+          type: string
+          description: ULID.
+        target_version_id:
+          type: string
+        previous_active_version_id:
+          type: string
+        spec:
+          $ref: '#/components/schemas/RolloutSpec'
+        status:
+          $ref: '#/components/schemas/RolloutStatus'
+        current_stage_index:
+          type: integer
+          format: int32
+        started_at:
+          type: integer
+          format: int64
+        stage_started_at:
+          type: integer
+          format: int64
+        paused_at:
+          type: integer
+          format: int64
+        pause_reason:
+          $ref: '#/components/schemas/PauseReason'
+        pause_detail:
+          type: string
+        creator:
+          type: string
+        last_actor:
+          type: string
+        completed_at:
+          type: integer
+          format: int64
+        chain_hash:
+          type: string
+
+    # -----------------------------------------------------------------------
+    # Rollout request/response wrappers
+    # -----------------------------------------------------------------------
+    CreateRolloutRequest:
+      type: object
+      required: [spec]
+      properties:
+        spec:
+          $ref: '#/components/schemas/RolloutSpec'
+
+    GetRolloutRequest:
+      type: object
+      required: [rollout_id]
+      properties:
+        rollout_id:
+          type: string
+
+    ListRolloutsRequest:
+      type: object
+      properties:
+        statuses:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolloutStatus'
+        page_size:
+          type: integer
+          format: int32
+        page_token:
+          type: string
+
+    ListRolloutsResponse:
+      type: object
+      properties:
+        rollouts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rollout'
+        next_page_token:
+          type: string
+
+    StartRolloutRequest:
+      type: object
+      required: [rollout_id]
+      properties:
+        rollout_id:
+          type: string
+        comment:
+          type: string
+
+    PauseRolloutRequest:
+      type: object
+      required: [rollout_id]
+      properties:
+        rollout_id:
+          type: string
+        comment:
+          type: string
+
+    ResumeRolloutRequest:
+      type: object
+      required: [rollout_id]
+      properties:
+        rollout_id:
+          type: string
+        comment:
+          type: string
+
+    PromoteRolloutRequest:
+      type: object
+      required: [rollout_id]
+      properties:
+        rollout_id:
+          type: string
+        comment:
+          type: string
+
+    AbortRolloutRequest:
+      type: object
+      required: [rollout_id]
+      properties:
+        rollout_id:
+          type: string
+        comment:
+          type: string

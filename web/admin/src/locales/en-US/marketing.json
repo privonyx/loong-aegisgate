@@ -1,0 +1,51 @@
+{
+  "hero": {
+    "title": "Case Study Numbers",
+    "empty": {
+      "desc": "No data yet — once adopters connect and accumulate requests, real savings-vs-baseline, cache hit rate, and quality-trend numbers will appear here.",
+      "quickstart": "5-min quickstart",
+      "joinAdopters": "Join ADOPTERS.md"
+    },
+    "scope": {
+      "global": "global",
+      "tenant": "tenant {{id}}"
+    },
+    "since": {
+      "launch": "since launch",
+      "date": "since {{date}}"
+    },
+    "cta": {
+      "question": "Want this for your stack?",
+      "quickstart": "5-min quickstart",
+      "runPrefix": "run",
+      "estimateSuffix": "to estimate your savings"
+    }
+  },
+  "quality": {
+    "label": "quality (EMA)",
+    "factuality": "factuality",
+    "refusal": "refusal",
+    "latency": "latency"
+  },
+  "analogy": {
+    "savedVsBaseline": "saved vs baseline",
+    "baseline": "baseline ${{cost}}",
+    "equivalent": "≈ <b>{{count}}</b> {{unit}}",
+    "unit": {
+      "coffee": "coffees",
+      "lunch": "developer lunches",
+      "subscription": "monthly SaaS subs"
+    }
+  },
+  "cache": {
+    "label": "cache hit",
+    "hitRate": "hit rate",
+    "intercepted": "intercepted <b>{{count}}</b> duplicate requests for you",
+    "total": " / {{total}} total ({{pct}}% intercepted vs LLM API)",
+    "type": {
+      "exact": "exact",
+      "semantic": "semantic",
+      "conversation": "conversation"
+    }
+  }
+}

@@ -1,0 +1,165 @@
+providers:
+  - name: openai
+    type: openai
+    base_url: "https://api.openai.com/v1"
+    api_keys:
+      - key: "${OPENAI_API_KEY}"
+        weight: 1
+    models:
+      - id: "gpt-4o"
+        cost_per_1k_input: 0.005
+        cost_per_1k_output: 0.015
+        max_tokens: 128000
+        tags: [high-quality, expensive]
+      - id: "gpt-4o-mini"
+        cost_per_1k_input: 0.00015
+        cost_per_1k_output: 0.0006
+        max_tokens: 128000
+        tags: [fast, cheap]
+    timeout_ms: 30000
+    max_retries: 2
+
+  - name: claude
+    type: claude
+    base_url: "https://api.anthropic.com"
+    api_keys:
+      - key: "${CLAUDE_API_KEY}"
+        weight: 1
+    models:
+      - id: "claude-sonnet-4-20250514"
+        cost_per_1k_input: 0.003
+        cost_per_1k_output: 0.015
+        max_tokens: 200000
+        tags: [high-quality]
+    timeout_ms: 60000
+    max_retries: 1
+
+  - name: qwen
+    type: qwen
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    api_keys:
+      - key: "${QWEN_API_KEY}"
+        weight: 1
+    models:
+      - id: "qwen-plus"
+        cost_per_1k_input: 0.0008
+        cost_per_1k_output: 0.002
+        max_tokens: 131072
+        tags: [balanced, chinese]
+    timeout_ms: 30000
+    max_retries: 2
+
+  - name: deepseek
+    type: deepseek
+    base_url: "https://api.deepseek.com"
+    api_keys:
+      - key: "${DEEPSEEK_API_KEY}"
+        weight: 1
+    models:
+      - id: "deepseek-chat"
+        cost_per_1k_input: 0.00014
+        cost_per_1k_output: 0.00028
+        max_tokens: 65536
+        tags: [balanced, chinese, cheap]
+      - id: "deepseek-reasoner"
+        cost_per_1k_input: 0.00055
+        cost_per_1k_output: 0.0022
+        max_tokens: 65536
+        tags: [high-quality, reasoning]
+    timeout_ms: 60000
+    max_retries: 2
+
+  - name: doubao
+    type: doubao
+    base_url: "https://ark.cn-beijing.volces.com/api/v3"
+    api_keys:
+      - key: "${DOUBAO_API_KEY}"
+        weight: 1
+    models:
+      - id: "doubao-pro-32k"
+        cost_per_1k_input: 0.0008
+        cost_per_1k_output: 0.002
+        max_tokens: 32768
+        tags: [balanced, chinese]
+      - id: "doubao-lite-32k"
+        cost_per_1k_input: 0.0003
+        cost_per_1k_output: 0.0006
+        max_tokens: 32768
+        tags: [fast, chinese, cheap]
+    timeout_ms: 30000
+    max_retries: 2
+
+  - name: gemini
+    type: gemini
+    base_url: "https://generativelanguage.googleapis.com/v1beta/openai"
+    api_keys:
+      - key: "${GEMINI_API_KEY}"
+        weight: 1
+    models:
+      - id: "gemini-2.0-flash"
+        cost_per_1k_input: 0.0001
+        cost_per_1k_output: 0.0004
+        max_tokens: 1048576
+        tags: [fast, cheap, multimodal]
+      - id: "gemini-2.5-pro-preview-05-06"
+        cost_per_1k_input: 0.00125
+        cost_per_1k_output: 0.01
+        max_tokens: 1048576
+        tags: [high-quality, reasoning, multimodal]
+    timeout_ms: 30000
+    max_retries: 2
+
+  - name: mistral
+    type: mistral
+    base_url: "https://api.mistral.ai/v1"
+    api_keys:
+      - key: "${MISTRAL_API_KEY}"
+        weight: 1
+    models:
+      - id: "mistral-small-latest"
+        cost_per_1k_input: 0.0001
+        cost_per_1k_output: 0.0003
+        max_tokens: 32768
+        tags: [fast, cheap]
+      - id: "mistral-large-latest"
+        cost_per_1k_input: 0.002
+        cost_per_1k_output: 0.006
+        max_tokens: 131072
+        tags: [high-quality]
+    timeout_ms: 30000
+    max_retries: 2
+
+  - name: local
+    type: openai_compatible
+    base_url: "http://localhost:11434/v1"
+    api_keys: []
+    models:
+      - id: "qwen2.5:7b"
+        cost_per_1k_input: 0.0
+        cost_per_1k_output: 0.0
+        max_tokens: 32000
+        tags: [free, local, fast]
+    timeout_ms: 60000
+
+default_model: "gpt-4o-mini"
+
+fallback_chains:
+  gpt-4o:
+    - gpt-4o-mini
+    - deepseek-chat
+    - qwen2.5:7b
+  claude-sonnet-4-20250514:
+    - gpt-4o
+    - deepseek-chat
+    - gpt-4o-mini
+  deepseek-reasoner:
+    - deepseek-chat
+    - gpt-4o-mini
+  gemini-2.5-pro-preview-05-06:
+    - gemini-2.0-flash
+    - gpt-4o-mini
+    - deepseek-chat
+  mistral-large-latest:
+    - mistral-small-latest
+    - gpt-4o-mini
+    - deepseek-chat

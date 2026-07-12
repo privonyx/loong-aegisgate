@@ -1,0 +1,44 @@
+stream_over_http_enabled: true
+
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http:
+          endpoint: "0.0.0.0:4318"
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/traces
+    wal:
+      path: /var/tempo/wal
+    pool:
+      max_workers: 100
+      queue_depth: 10000
+
+metrics_generator:
+  storage:
+    path: /var/tempo/generator/wal
+  traces_storage:
+    path: /var/tempo/generator/traces
+  processor:
+    span_metrics:
+      dimensions:
+        - service.name
+    service_graphs:
+      dimensions:
+        - service.name
+
+overrides:
+  defaults:
+    global:
+      max_bytes_per_trace: 5000000
+    metrics_generator:
+      processors:
+        - span-metrics
+        - service-graphs

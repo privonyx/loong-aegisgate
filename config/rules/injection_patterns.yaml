@@ -1,0 +1,154 @@
+# Prompt Injection Detection Patterns
+# L1: Regex fast-scan patterns
+
+patterns:
+  - name: "ignore_instructions"
+    regex: "(?i)(ignore|disregard|forget|override)\\s+(all\\s+)?(previous|above|prior|earlier|preceding)\\s+(instructions|rules|guidelines|prompts|context)"
+    severity: "high"
+
+  - name: "new_instructions"
+    regex: "(?i)(new|updated|revised|real)\\s+(instructions|rules|system\\s+prompt|directives)\\s*[:：]"
+    severity: "high"
+
+  - name: "role_hijack"
+    regex: "(?i)(you\\s+are\\s+now|act\\s+as|pretend\\s+(to\\s+be|you\\s+are)|roleplay\\s+as|imagine\\s+you\\s+are)\\s+(DAN|evil|unrestricted|jailbroken|unfiltered)"
+    severity: "high"
+
+  - name: "system_block_injection"
+    regex: "(?i)(```|</?)(system|prompt|instruction|context)[>\\s]"
+    severity: "medium"
+
+  - name: "do_anything_now"
+    regex: "(?i)\\bDAN\\b.*\\b(do\\s+anything|no\\s+(rules|restrictions|limitations|boundaries))"
+    severity: "high"
+
+  - name: "encoding_evasion"
+    regex: "(?i)(base64|rot13|hex|unicode|url)\\s*(encode|decode|encoded|decoded)"
+    severity: "low"
+
+  - name: "prompt_leak"
+    regex: "(?i)(show|reveal|display|print|output|repeat|echo)\\s+(\\w+\\s+)*(your|the|system)\\s+(prompt|instructions|rules|context|system\\s+message)"
+    severity: "medium"
+
+  - name: "delimiter_injection"
+    regex: "(?i)(\\[INST\\]|\\[/INST\\]|<<SYS>>|<</SYS>>|<\\|im_start\\|>|<\\|im_end\\|>)"
+    severity: "high"
+
+  # --- Chinese Injection Patterns ---
+  - name: "cn_ignore_instructions"
+    regex: "(忽略|无视|丢弃|放弃|不要遵守)(之前的?|上面的?|以前的?|先前的?)?(所有的?)?(指令|规则|要求|限制|提示词?|约束)"
+    severity: "high"
+
+  - name: "cn_new_instructions"
+    regex: "(新的?|更新的?|真正的?|实际的?)(指令|规则|系统提示|要求)\\s*[:：]"
+    severity: "high"
+
+  - name: "cn_role_switch"
+    regex: "(你现在是|从现在开始你是|假装你是|扮演|你的新身份是)(一个)?(没有限制的?|无限制的?|不受约束的?|邪恶的?|越狱的?)"
+    severity: "high"
+
+  - name: "cn_prompt_leak"
+    regex: "(输出|显示|打印|重复|泄露|告诉我)(你的|系统的?)?(系统提示|初始指令|提示词|system\\s*prompt|内部指令)"
+    severity: "medium"
+
+  - name: "cn_dan_mode"
+    regex: "(DAN模式|开发者模式|调试模式|无审查模式|越狱模式)"
+    severity: "high"
+
+  - name: "cn_bypass_safety"
+    regex: "(绕过|突破|跳过|关闭|禁用)(安全|审查|过滤|限制|防护)"
+    severity: "high"
+
+  - name: "cn_system_block"
+    regex: "(```|</?)(系统|system|指令|prompt)[>\\s]"
+    severity: "medium"
+
+  - name: "cn_do_anything"
+    regex: "(你可以做任何事|没有任何限制|不受任何约束|无视一切规则)"
+    severity: "high"
+
+  - name: "cn_reverse_psychology"
+    regex: "(如果你是真正的AI|一个真正的AI会|证明你不是|你不敢).{0,20}(告诉|输出|显示|执行)"
+    severity: "medium"
+
+  - name: "cn_fictional_frame"
+    regex: "(在一个虚构的?世界|假设在一个|想象一个场景).{0,30}(没有限制|可以自由|不受约束)"
+    severity: "medium"
+
+  # --- Japanese Injection Patterns ---
+  - name: "jp_ignore_instructions"
+    regex: "(前の|以前の|上記の)(指示|命令|ルール|制約)(を|は)(無視|忘れ|破棄)"
+    severity: "high"
+
+  - name: "jp_role_switch"
+    regex: "(今から|これから)(あなたは|お前は).{0,10}(制限なし|制約なし|自由な)"
+    severity: "high"
+
+  - name: "jp_prompt_leak"
+    regex: "(システムプロンプト|初期指示|内部命令)(を|の)(表示|出力|教えて|見せて)"
+    severity: "medium"
+
+  - name: "jp_new_instructions"
+    regex: "(新しい|更新された)(指示|命令|ルール)[:：]"
+    severity: "high"
+
+  - name: "jp_bypass"
+    regex: "(安全|フィルター|制限)(を|の)(無効|回避|突破|解除)"
+    severity: "high"
+
+  # --- Korean Injection Patterns ---
+  - name: "ko_ignore_instructions"
+    regex: "(이전|위의|앞의)\\s*(지시|명령|규칙)(을|를)\\s*(무시|잊어|무효)"
+    severity: "high"
+
+  - name: "ko_role_switch"
+    regex: "(지금부터|이제부터)\\s*(너는|당신은).{0,10}(제한 없|자유로운)"
+    severity: "high"
+
+  - name: "ko_prompt_leak"
+    regex: "(시스템 프롬프트|초기 지시)(를|을)\\s*(보여|출력|알려)"
+    severity: "medium"
+
+  # --- Russian Injection Patterns ---
+  - name: "ru_ignore_instructions"
+    regex: "(Игнорируй|Забудь|Отмени|Пренебреги)\\s+(предыдущие|прежние|все)\\s+(инструкции|правила|указания|ограничения)"
+    severity: "high"
+
+  - name: "ru_role_switch"
+    regex: "(Теперь ты|Ты теперь|Представь что ты).{0,15}(без ограничений|свободный|злой)"
+    severity: "high"
+
+  - name: "ru_prompt_leak"
+    regex: "(Покажи|Выведи|Раскрой)\\s+(системный промпт|начальные инструкции|свои правила)"
+    severity: "medium"
+
+keywords:
+  - "ignore all previous"
+  - "disregard your instructions"
+  - "forget your rules"
+  - "you are now DAN"
+  - "jailbreak"
+  - "bypass safety"
+  - "override system prompt"
+  - "new system prompt"
+  # Chinese
+  - "忽略之前的"
+  - "无视所有规则"
+  - "你是DAN"
+  - "你现在是"
+  - "越狱"
+  - "绕过安全"
+  - "输出系统提示"
+  # Japanese
+  - "前の指示を無視"
+  - "システムプロンプト"
+  # Korean
+  - "이전 지시를 무시"
+  # Russian
+  - "Игнорируй предыдущие"
+
+heuristic_features:
+  nested_quotes_threshold: 3
+  instruction_override_score: 0.7
+  role_switch_score: 0.8
+  encoding_attempt_score: 0.5

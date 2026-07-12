@@ -1,0 +1,65 @@
+{
+  "actions": {
+    "export": "导出",
+    "confirm": "确认",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "新建",
+    "close": "关闭",
+    "search": "搜索",
+    "refresh": "刷新",
+    "submit": "提交",
+    "back": "返回",
+    "retry": "重试",
+    "copy": "复制",
+    "view": "查看"
+  },
+  "status": {
+    "loading": "加载中…",
+    "empty": "暂无数据",
+    "error": "出错了",
+    "success": "成功",
+    "active": "启用",
+    "inactive": "禁用",
+    "enabled": "已启用",
+    "disabled": "已禁用"
+  },
+  "table": {
+    "noData": "暂无数据",
+    "total": "共 {{count}} 条",
+    "page": "第 {{page}} 页",
+    "rowsPerPage": "每页行数",
+    "actions": "操作"
+  },
+  "roleGuard": {
+    "denied": "你没有访问此页面的权限（需要更高权限角色）。"
+  },
+  "export": {
+    "started": "导出已开始下载",
+    "failed": "导出失败",
+    "fromDate": "起始日期",
+    "toDate": "结束日期",
+    "format": "格式",
+    "formatLabel": "导出格式",
+    "hint": "留空日期则导出后端默认时间范围。仅 SuperAdmin 可跨租户导出。"
+  },
+  "common": {
+    "yes": "是",
+    "no": "否",
+    "all": "全部",
+    "none": "无",
+    "unknown": "未知"
+  },
+  "layout": {
+    "brand": "AegisGate",
+    "adminPanel": "管理面板",
+    "collapse": "折叠",
+    "toggleLight": "切换浅色",
+    "toggleDark": "切换深色",
+    "accountSecurity": "账户安全 (MFA)",
+    "logout": "退出",
+    "language": "语言"
+  }
+}

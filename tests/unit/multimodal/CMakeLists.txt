@@ -1,0 +1,15 @@
+add_executable(test_modality test_modality.cpp)
+target_link_libraries(test_modality PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ModalityTest COMMAND test_modality)
+
+add_executable(test_modality_router test_modality_router.cpp)
+target_link_libraries(test_modality_router PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ModalityRouterTest COMMAND test_modality_router)
+
+add_executable(test_modality_handlers test_modality_handlers.cpp)
+target_link_libraries(test_modality_handlers PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ModalityHandlersTest COMMAND test_modality_handlers)
+
+add_executable(test_modality_rate_limiter test_modality_rate_limiter.cpp)
+target_link_libraries(test_modality_rate_limiter PRIVATE aegisgate_core GTest::gtest_main)
+add_test(NAME ModalityRateLimiterTest COMMAND test_modality_rate_limiter)

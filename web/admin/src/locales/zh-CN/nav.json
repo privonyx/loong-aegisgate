@@ -1,0 +1,23 @@
+{
+  "groups": {
+    "overview": "概览",
+    "access": "租户与访问",
+    "finance": "成本与财务",
+    "governance": "策略与治理"
+  },
+  "items": {
+    "dashboard": "仪表盘",
+    "tenants": "租户",
+    "users": "用户",
+    "keys": "密钥",
+    "sso": "SSO 配置",
+    "costs": "成本",
+    "savings": "省钱",
+    "forecast": "预测",
+    "finops": "FinOps 审批",
+    "rules": "护栏规则",
+    "guard": "护栏诊断",
+    "templates": "模板",
+    "audits": "审计"
+  }
+}
