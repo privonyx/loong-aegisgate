@@ -70,6 +70,27 @@ EXPECTED_SHA="${ONNXRUNTIME_SHA256:-${SHA256_PINS[$PIN_KEY]:-}}"
 # cmake Targets 引用 lib64/libonnxruntime.so.<ver>（官方包里 lib64 -> lib）。
 SO_NAME="libonnxruntime.so.${VERSION}"
 
+# 官方 linux tarball 把头文件放在 include/*.h，但 cmake Targets 的
+# INTERFACE_INCLUDE_DIRECTORIES 是 include/onnxruntime。补一层相对 symlink
+# 兼容目录（与历史本地 vendored 树一致）。
+ensure_include_shim() {
+    local dest="$1"
+    local inc="$dest/include"
+    local shim="$inc/onnxruntime"
+    [[ -d "$inc" ]] || return 1
+    mkdir -p "$shim"
+    local f base
+    for f in "$inc"/*.h; do
+        [[ -e "$f" ]] || continue
+        base="$(basename "$f")"
+        [[ -e "$shim/$base" ]] || ln -s "../$base" "$shim/$base" || return 1
+    done
+    if [[ -d "$inc/core" && ! -e "$shim/core" ]]; then
+        ln -s ../core "$shim/core" || return 1
+    fi
+    [[ -e "$shim/onnxruntime_cxx_api.h" ]]
+}
+
 # 已解压目录是否可被 find_package(onnxruntime) 使用。
 ort_install_ready() {
     local dest="$1"
@@ -80,7 +101,12 @@ ort_install_ready() {
         rm -rf "$dest/lib64"
         ln -s lib "$dest/lib64" || return 1
     fi
-    [[ -e "$dest/lib64/${SO_NAME}" ]]
+    [[ -e "$dest/lib64/${SO_NAME}" ]] || return 1
+    # Targets 还要求 include/onnxruntime 存在；官方包需 shim。
+    if [[ ! -e "$dest/include/onnxruntime/onnxruntime_cxx_api.h" ]]; then
+        ensure_include_shim "$dest" || return 1
+    fi
+    [[ -d "$dest/include/onnxruntime" ]]
 }
 
 echo "ONNX Runtime fetch: ${PKG_DIRNAME}"
@@ -91,7 +117,7 @@ if [[ -d "$DEST" && "$FORCE" -ne 1 ]]; then
         echo "  已存在且完整（用 --force 重新下载），跳过。"
         exit 0
     fi
-    echo "  已存在但不完整（缺 ${SO_NAME} 或 lib64 链接），重新拉取..."
+    echo "  已存在但不完整（缺 ${SO_NAME} / lib64 / include shim），重新拉取..."
     rm -rf "$DEST"
 fi
 
@@ -148,7 +174,7 @@ else
 fi
 
 if ! ort_install_ready "$DEST"; then
-    echo "ERROR: 解包后安装不完整（缺 lib/${SO_NAME} 或 lib64 链接）: $DEST" >&2
+    echo "ERROR: 解包后安装不完整（缺 lib/${SO_NAME}、lib64 或 include/onnxruntime shim）: $DEST" >&2
     exit 1
 fi
 
