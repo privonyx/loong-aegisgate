@@ -7,29 +7,82 @@
 //
 //   A. all-disabled         → no workflow, no applier, no budget stage
 //   B. budget_guard-only    → no workflow, no applier, BUT budget stage on
-//   C. autonomy + cost_opt  → workflow + applier (router_type=ml), no stage
+//   C. autonomy + cost_opt  → workflow + applier (router_type=ml +
+//      AdvancedRouting license), no stage
 //
 // We deliberately split (B) and (C) so the BudgetGuardStage installation
 // path is exercised independently of the workflow path (the two are wired
-// from disjoint config flags per design §6.1).
+// from disjoint config flags per design §6.1). CostAutonomyApplier needs a
+// live MLRouter; post-REV20260707-I13 that requires Feature::AdvancedRouting.
 
 #include <gtest/gtest.h>
 
 #include "core/config.h"
+#include "core/feature_gate.h"
 #include "server/gateway_runtime.h"
 #include "observe/autonomy/approval_workflow.h"
 
+#include <nlohmann/json.hpp>
+#include <openssl/evp.h>
 #include <yaml-cpp/yaml.h>
 
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <unistd.h>
+#include <vector>
 
 using namespace aegisgate;
 
 namespace {
+
+// Mirrors tests/unit/core/test_feature_gate.cpp — CostAutonomyApplier
+// needs a live MLRouter, and MLRouter is gated on Feature::AdvancedRouting
+// (REV20260707-I13). Community edition falls back to CostAware, so Test C
+// must unlock Enterprise with a signed license that includes
+// advanced_routing.
+std::string sha256Hex(const std::string& input) {
+    unsigned char hash[EVP_MAX_MD_SIZE];
+    unsigned int hash_len = 0;
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    EVP_DigestInit_ex(ctx, EVP_sha256(), nullptr);
+    EVP_DigestUpdate(ctx, input.data(), input.size());
+    EVP_DigestFinal_ex(ctx, hash, &hash_len);
+    EVP_MD_CTX_free(ctx);
+    std::ostringstream oss;
+    for (unsigned int i = 0; i < hash_len; ++i)
+        oss << std::hex << std::setfill('0') << std::setw(2)
+            << static_cast<int>(hash[i]);
+    return oss.str();
+}
+
+std::string writeAdvancedRoutingLicense() {
+    const std::vector<std::string> features = {"advanced_routing"};
+    const std::string payload =
+        FeatureGate::buildLicensePayload("enterprise", "autonomy-test",
+                                         "2099-12-31", features);
+    constexpr const char* kSalt = "aegisgate-v1-f7e2a9c4d1b8";
+    const std::string full_hash = sha256Hex(payload + kSalt);
+    const std::string key =
+        "AEGIS-ENT-" + full_hash.substr(0, 16) + full_hash.substr(0, 16);
+
+    auto path = std::filesystem::temp_directory_path() /
+        ("aegis_runtime_autonomy_license_" + std::to_string(getpid()) +
+         ".json");
+    nlohmann::json j = {
+        {"edition", "enterprise"},
+        {"customer", "autonomy-test"},
+        {"expires", "2099-12-31"},
+        {"features", features},
+        {"license_key", key},
+    };
+    std::ofstream ofs(path);
+    ofs << j.dump();
+    return path.string();
+}
 
 // We start from the repo-shipped config/aegisgate.yaml so PipelineAssembler
 // has every section it expects (storage / cache / audit / models / etc.),
@@ -39,7 +92,8 @@ namespace {
 std::string buildYaml(bool autonomy_on,
                       bool cost_opt_on,
                       bool budget_guard_on,
-                      const std::string& router_type = "ml") {
+                      const std::string& router_type = "ml",
+                      bool unlock_advanced_routing = false) {
     YAML::Node root = YAML::LoadFile("config/aegisgate.yaml");
     root["routing"]["type"] = router_type;
     root["autonomy"]["enabled"] = autonomy_on;
@@ -53,6 +107,10 @@ std::string buildYaml(bool autonomy_on,
     root["budget_guard"]["downgrade_tier"] = "economy";
     root["auth"]["enabled"] = false;
     root["auth"]["api_keys"] = YAML::Node(YAML::NodeType::Sequence);
+    if (unlock_advanced_routing) {
+        root["edition"] = "enterprise";
+        root["license_file"] = writeAdvancedRoutingLicense();
+    }
     std::stringstream ss;
     ss << root;
     return ss.str();
@@ -135,11 +193,15 @@ TEST(GatewayRuntimeAutonomyTest, BudgetGuardOnlyInstallsStageWithoutWorkflow) {
 }
 
 // --- Test C: autonomy + cost_optimizer wires workflow + applier (no stage) --
+// AdvancedRouting license is required so MLRouter (and thus
+// CostAutonomyApplier) actually assemble under community-default CI.
 
 TEST(GatewayRuntimeAutonomyTest, AutonomyEnabledWiresWorkflowAndApplier) {
     initRuntimeWithYaml(buildYaml(/*autonomy*/ true,
                                   /*cost_opt*/ true,
-                                  /*budget_guard*/ false));
+                                  /*budget_guard*/ false,
+                                  /*router_type*/ "ml",
+                                  /*unlock_advanced_routing*/ true));
     auto& rt = GatewayRuntime::instance();
     ASSERT_TRUE(rt.isInitialized());
 

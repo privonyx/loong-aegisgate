@@ -237,7 +237,7 @@ void GatewayRuntime::initialize(const Config& config) {
                 "Router: 'ml' requires the AdvancedRouting feature "
                 "(Enterprise edition license); falling back to CostAware. "
                 "Upgrade license or set routing.type = basic | cost_aware. "
-                "See docs/known-issues.md#REV20260707-I13.");
+                "See docs/feature-list.md (Routing · MLRouter).");
             router_ = std::make_unique<CostAwareRouter>();
             spdlog::info("Router: CostAware (license-gated fallback)");
         }
@@ -283,7 +283,7 @@ void GatewayRuntime::initialize(const Config& config) {
             spdlog::warn(
                 "Router: ABTestRouter requested ({} experiment(s)) but the "
                 "AdvancedRouting feature is not licensed; skipping A/B wrap. "
-                "See docs/known-issues.md#REV20260707-I13.",
+                "See docs/feature-list.md (Routing · A/B / Geo).",
                 ab_experiments.size());
         }
     }
@@ -307,7 +307,7 @@ void GatewayRuntime::initialize(const Config& config) {
             spdlog::warn(
                 "Router: GeoRouter requested (geo.enabled=true) but the "
                 "AdvancedRouting feature is not licensed; skipping geo wrap. "
-                "See docs/known-issues.md#REV20260707-I13.");
+                "See docs/feature-list.md (advanced_routing).");
         }
     }
 
@@ -597,8 +597,9 @@ void GatewayRuntime::initialize(const Config& config) {
                         config.autonomyProposalRetentionDays());
                 } else if (config.costAutonomyEnabled()) {
                     spdlog::warn(
-                        "cost_optimizer.enabled=true but router_type!=ml — "
-                        "CostAutonomyApplier skipped (no MLRouter to drive)");
+                        "cost_optimizer.enabled=true but no MLRouter is "
+                        "available (routing.type!=ml, or AdvancedRouting "
+                        "license missing) — CostAutonomyApplier skipped");
                 }
 
                 // Phase 11.1 (TASK-20260523-01 R2.5) — Adaptive Guard wiring.
