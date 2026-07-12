@@ -4,7 +4,7 @@
 
 > **Audience:** product selection, capability inventory, external/internal pitching, and RFP responses.
 > **Baseline:** v1.0.0 GA (single binary; runtime Feature Gate decides Community vs. Enterprise capabilities).
-> **Sources of truth:** `README.md` Features section, [Architecture guide](guides/architecture.md), `docs/guides/*.md`, [OpenAPI](openapi.yaml), [OpenAI compatibility matrix](openai-compat-matrix.md), [ROADMAP v4](ROADMAP_v4.md).
+> **Sources of truth:** `README.md` Features section, [Architecture guide](guides/architecture.md), `docs/guides/*.md`, [OpenAPI](openapi.yaml), [OpenAI compatibility matrix](openai-compat-matrix.md), [Roadmap](ROADMAP.md).
 
 ## Legend
 
@@ -229,7 +229,7 @@ Runtime operability under `/admin/api/*`, driven by config.
 | Prompt template management | `/admin/api/templates/*` full CRUD; when Chat Completions has no `system` message, the tenant's active template (weight-selected) is prepended as system. Optional override: `X-AegisGate-Template: <name>`. Response: `X-AegisGate-Template-Applied`. | 🔵 | `/admin/api/templates/*` · `X-AegisGate-Template` | [Admin API](guides/admin-api.md) |
 | Rollout · canary | Rollout controller: progressing → completed; onTick idempotent reconciliation (activate + updateRollout compensation). Stored via control-plane / env (not a top-level `rollout.*` YAML root in `aegisgate.yaml`). | 🔵 | Control plane rollout APIs · [Rollout](guides/rollout.md) | [Rollout](guides/rollout.md) |
 | Provider manifest management | Declarative model / provider metadata; validated by `aegisctl conformance`. | ⚪ | `api/providers/definitions/*.yaml` | [Provider manifest](guides/provider-manifest.md) |
-| Cluster control plane | Centralized config distribution and node coordination when `features.deployment.mode: cluster` (Redis-backed shared state). | 🔵 | `features.deployment.mode: cluster` | [Control plane](guides/control-plane.md) |
+| Cluster control plane | Centralized config distribution and node coordination when `deployment.mode: cluster` (Redis-backed shared state). | 🔵 | `deployment.mode: cluster` | [Control plane](guides/control-plane.md) |
 | Feedback Bus | Event / feedback pub-sub; guardrail feedback / autonomy proposal flow. | ⚪ | `feedback_bus.*` | [Feedback bus](guides/feedback-bus.md) |
 
 ---
@@ -247,7 +247,7 @@ The `AegisOps` strategic layer: the gateway is not only a savings pipe but also 
 | Autonomy report | `GET /admin/api/autonomy/report`: savings-impact aggregation. | 🔵 | `/admin/api/autonomy/report` | [Cost autonomy](guides/cost-autonomy.md) |
 | Savings event stream | `savings_events` table + `POST/GET /admin/api/savings/events`; three-backend parity (incl. Postgres). | 🔵 | `/admin/api/savings/events` | [Savings dashboard](guides/admin-savings.md) |
 | Case Study Headline | `GET /admin/api/case-study/headline` generates a pitchable savings headline. | 🔵 | `/admin/api/case-study/headline` | [Admin API](guides/admin-api.md) |
-| AegisOps strategic vision | Evolution from "AI gateway" to "AI governance platform" — capability matrix and roadmap. | 📐 | — | [AegisOps vision](positioning/aegisops-vision.md) · [ROADMAP v4](ROADMAP_v4.md) |
+| AegisOps strategic vision | Evolution from "AI gateway" to "AI governance platform" — capability matrix and roadmap. | 📐 | — | [AegisOps vision](positioning/aegisops-vision.md) · [Roadmap](ROADMAP.md) |
 
 ---
 
@@ -259,7 +259,7 @@ The `AegisOps` strategic layer: the gateway is not only a savings pipe but also 
 | 5-min quickstart container | Auto-generated API key + self-provisioned SQLite volume + one-command start. | ⚪ | `scripts/quickstart-entrypoint.sh` | [5-minute quickstart](quickstart.md) |
 | Helm Chart | Official `helm/aegisgate/` chart; full `values.yaml` overrides. | 🔵 | `helm/aegisgate/*` | [Production deployment](guides/production-deployment.md) |
 | K8s deployment | Native Deployment / Service / ConfigMap examples. | 🔵 | `deploy/kubernetes/*` | [Production deployment](guides/production-deployment.md) |
-| Redis cluster mode | Shared cache + rate limit + breaker state; nodes stateless. | 🔵 | `cluster.enabled: true` | [Control plane](guides/control-plane.md) |
+| Redis cluster mode | Shared cache + rate limit + breaker state; nodes stateless. | 🔵 | `deployment.mode: cluster` | [Control plane](guides/control-plane.md) |
 | Multi-region | Geo-distributed topology paired with GeoRouter. | 🔵 | `routing.geo.*` | [Multi-region](guides/multi-region.md) |
 | Production-validation runbook | Pre / during / post go-live checklist. | ⚪ | — | [Production validation runbook](guides/production-validation-runbook.md) |
 | Performance tuning | Throughput / latency / resource three-axis optimization. | ⚪ | — | [Performance tuning](guides/performance-tuning.md) |
@@ -409,7 +409,7 @@ Legend: ✅ = supported · — = not supported in this edition.
 - [README](../README.md) — project overview and quick start
 - [Architecture guide](guides/architecture.md) — system overview, request pipeline, timing diagrams
 - [OpenAPI specification](openapi.yaml) · [OpenAI compat matrix](openai-compat-matrix.md) — machine-readable API definitions
-- [ROADMAP v4](ROADMAP_v4.md) — AegisOps strategic roadmap
+- [Roadmap](ROADMAP.md) — AegisOps strategic roadmap
 - [Documentation index](README.md) — all guides
 
 ---

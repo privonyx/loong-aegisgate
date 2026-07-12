@@ -316,10 +316,10 @@ tenant_id=team-dev&budget=1000&history_days=30" \
 
 ## 配置说明（Token 路径）
 
-除缓存 / 路由 / 预算外，网关还可在 `features` 下通过 YAML 压缩 prompt 与输出（见 `config/aegisgate.yaml`）：
+除缓存 / 路由 / 预算外，网关还可通过顶层 `token_optimization` YAML 块压缩 prompt 与输出（见 `config/aegisgate.yaml`）：
 
 ```yaml
-features:
+token_optimization:
   prompt_compression:
     enabled: true
     max_context_messages: 20
@@ -334,10 +334,10 @@ features:
 
 | 配置键 | 作用 |
 |--------|------|
-| `prompt_compression.*` | 限制历史消息长度，可选空白压缩 / system 去重 |
-| `smart_max_tokens.*` | 推导有界 `max_tokens`，避免过大固定默认值 |
+| `token_optimization.prompt_compression.*` | 限制历史消息长度，可选空白压缩 / system 去重 |
+| `token_optimization.smart_max_tokens.*` | 推导有界 `max_tokens`，避免过大固定默认值 |
 
-不存在顶层 `token_optimization.*` 根键——请使用上表键名。超限拒绝或降级见 `budget_guard.*`（第 4 层）。
+这些键位于顶层 `token_optimization.*` 根下（见 `config/aegisgate.yaml`）。超限拒绝或降级见 `budget_guard.*`（第 4 层）。
 
 ## 成本优化最佳实践
 

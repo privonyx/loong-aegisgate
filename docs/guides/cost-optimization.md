@@ -341,10 +341,10 @@ Response:
 
 ## Configuration reference (token path)
 
-In addition to cache / routing / budgets, the gateway can shrink prompt and output size via YAML under `features` (see `config/aegisgate.yaml`):
+In addition to cache / routing / budgets, the gateway can shrink prompt and output size via the top-level `token_optimization` YAML block (see `config/aegisgate.yaml`):
 
 ```yaml
-features:
+token_optimization:
   prompt_compression:
     enabled: true
     max_context_messages: 20
@@ -359,10 +359,10 @@ features:
 
 | Key | Role |
 |-----|------|
-| `prompt_compression.*` | Caps history length, optional whitespace / system-prompt dedup before upstream |
-| `smart_max_tokens.*` | Derives a bounded `max_tokens` instead of oversized fixed defaults |
+| `token_optimization.prompt_compression.*` | Caps history length, optional whitespace / system-prompt dedup before upstream |
+| `token_optimization.smart_max_tokens.*` | Derives a bounded `max_tokens` instead of oversized fixed defaults |
 
-There is no top-level `token_optimization.*` root — use the keys above. Cost caps that reject or downgrade when exceeded are configured under `budget_guard.*` (Layer 4).
+These keys live under the top-level `token_optimization.*` root (see `config/aegisgate.yaml`). Cost caps that reject or downgrade when exceeded are configured under `budget_guard.*` (Layer 4).
 
 ## Cost optimization best practices
 
