@@ -73,3 +73,7 @@ vcpkg_installed/
 # embedded vcpkg checkout (toolchain only, not tracked)
 vcpkg/
 *.rdb
+
+# Internal dev workflow & memory bank — local tooling only, never published
+memory-bank/
+.cursor/
