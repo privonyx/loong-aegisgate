@@ -8,18 +8,18 @@
 `ENABLE_GUARD_MODEL` is **default-ON** (a base capability since TASK-20260614-01).
 It depends on both the ONNX Runtime and the SentencePiece tokenizer:
 
-- **ONNX Runtime** resolves from either:
-  - the local `third_party/onnxruntime-<os>-<arch>-<ver>` package
-    (`scripts/fetch-onnxruntime.sh`), or
-  - the `guard` vcpkg feature (`onnxruntime`).
+- **ONNX Runtime** resolves from the local
+  `third_party/onnxruntime-<os>-<arch>-<ver>` package
+  (`scripts/fetch-onnxruntime.sh`). The pinned vcpkg baseline has no
+  `onnxruntime` port — do not rely on a vcpkg feature for it.
 - **SentencePiece** is provided by the `guard-spm` vcpkg feature, which is **not**
-  installed in standard builds. To fully enable the guard path, reconfigure
-  with:
+  installed in standard builds. To fully enable the guard path:
 
 ```bash
+scripts/fetch-onnxruntime.sh
 cmake -B build \
   -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake \
-  -DVCPKG_MANIFEST_FEATURES="guard;guard-spm"
+  -DVCPKG_MANIFEST_FEATURES=guard-spm
 ```
 
 If either dependency is missing, the build **gracefully downgrades**

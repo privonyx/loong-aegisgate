@@ -33,11 +33,11 @@
       "dependencies": [ "libpq" ]
     },
     "guard": {
-      "description": "ONNX guard model for safety classification",
-      "dependencies": [ "onnxruntime" ]
+      "description": "Reserved name. ONNX Runtime is not in the pinned vcpkg baseline — use scripts/fetch-onnxruntime.sh + feature guard-spm instead",
+      "dependencies": []
     },
     "guard-spm": {
-      "description": "SentencePiece tokenizer for DeBERTa-v3 guard model (ONNX runtime from third_party, so onnxruntime not pulled here)",
+      "description": "SentencePiece tokenizer for DeBERTa-v3 guard model (ONNX Runtime from third_party via scripts/fetch-onnxruntime.sh)",
       "dependencies": [ "sentencepiece" ]
     },
     "icu": {

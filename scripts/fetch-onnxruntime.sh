@@ -63,7 +63,7 @@ DEST="${ROOT_DIR}/third_party/${PKG_DIRNAME}"
 # key: <asset_os>-<arch>-<ver>。留空表示「无内置 pin」→ 默认拒绝
 # （除非 ONNXRUNTIME_SHA256 或 --allow-unverified）。
 declare -A SHA256_PINS=(
-    # ["linux-x64-1.24.2"]="<回填>"
+    ["linux-x64-1.24.2"]="43725474ba5663642e17684717946693850e2005efbd724ac72da278fead25e6"
 )
 PIN_KEY="${ASSET_OS}-${ARCH}-${VERSION}"
 EXPECTED_SHA="${ONNXRUNTIME_SHA256:-${SHA256_PINS[$PIN_KEY]:-}}"

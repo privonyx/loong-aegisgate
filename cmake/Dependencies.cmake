@@ -100,8 +100,8 @@ if(ENABLE_GUARD_MODEL)
             "SentencePiece not found — gracefully disabling ENABLE_GUARD_MODEL "
             "(ENABLE_ONNX neural embeddings remain enabled). The ONNX safety "
             "guard will NOT be active. Reconfigure with "
-            "-DVCPKG_MANIFEST_FEATURES=\"guard;guard-spm\" to install "
-            "onnxruntime + SentencePiece and enable the guard path.")
+            "-DVCPKG_MANIFEST_FEATURES=guard-spm to install SentencePiece "
+            "(and scripts/fetch-onnxruntime.sh for the ORT prebuilt).")
         set(ENABLE_GUARD_MODEL OFF CACHE BOOL "Enable ONNX guard model for safety classification" FORCE)
     endif()
 endif()

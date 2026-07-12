@@ -85,15 +85,23 @@ jobs:
           key: vcpkg-${{ runner.os }}-prod-smoke-${{ hashFiles('vcpkg.json') }}
           restore-keys: vcpkg-${{ runner.os }}-prod-smoke-
 
+      # 开源后 third_party/onnxruntime-* 不再入库；当前 vcpkg baseline 也没有
+      # onnxruntime port（`guard` feature 会报 baseline missing）。生产档位用
+      # 官方预编译包 + guard-spm（SentencePiece）保持 ENABLE_GUARD_MODEL=ON。
+      - name: Cache ONNX Runtime prebuilt
+        uses: actions/cache@v4
+        with:
+          path: third_party/onnxruntime-linux-x64-1.24.2
+          key: onnxruntime-linux-x64-1.24.2-43725474ba5663
+
+      - name: Fetch ONNX Runtime
+        run: bash scripts/fetch-onnxruntime.sh
+
       - name: Configure CMake (production profile, all backends ON)
         # 生产档位全开；tee 到 configure.log 供 smoke 断言能力摘要五行 [ON ]。
         # 先 mkdir build：管道启动时 tee 立即打开 build/configure.log，早于
         # cmake -B build 创建该目录 → 否则 tee 报 "No such file or directory"，
         # 在 pipefail 下使整步变红。
-        #
-        # guard + guard-spm：开源后 third_party/onnxruntime-* 不再入库（.gitignore），
-        # 必须经 vcpkg `guard` 拉 onnxruntime，否则 cmake/Dependencies.cmake 会把
-        # ENABLE_GUARD_MODEL graceful 降级为 OFF，smoke 能力摘要断言失败。
         run: |
           mkdir -p build
           cmake -B build -G Ninja \
@@ -107,7 +115,7 @@ jobs:
             -DENABLE_GUARD_MODEL=ON \
             -DENABLE_CONTROL_PLANE=ON \
             -DENABLE_CURL=ON \
-            -DVCPKG_MANIFEST_FEATURES="guard;guard-spm;redis;pg;otel;control-plane" \
+            -DVCPKG_MANIFEST_FEATURES="guard-spm;redis;pg;otel;control-plane" \
             2>&1 | tee build/configure.log
 
       - name: Build

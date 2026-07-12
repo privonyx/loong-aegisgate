@@ -32,11 +32,12 @@ COPY config/ config/
 #       --build-arg ENABLE_PG=ON \
 #       --build-arg ENABLE_OPENTELEMETRY=ON \
 #       --build-arg ENABLE_CONTROL_PLANE=ON \
-#       --build-arg VCPKG_FEATURES="guard;guard-spm;redis;pg;otel;control-plane" \
+#       --build-arg VCPKG_FEATURES="guard-spm;redis;pg;otel;control-plane" \
 #       -t aegisgate:prod .
 #   生产档位必须四 ARG 全 ON 同时 VCPKG_FEATURES 覆盖对应 feature，否则
-#   find_package 在 cmake 阶段就会失败（hiredis / libpq / grpc / opentelemetry-cpp）；
-#   缺 `guard`（onnxruntime）时 ENABLE_GUARD_MODEL 会 graceful 降为 OFF。
+#   find_package 在 cmake 阶段就会失败（hiredis / libpq / grpc / opentelemetry-cpp）。
+#   ONNX Runtime 请先 scripts/fetch-onnxruntime.sh 放入 third_party/（当前
+#   vcpkg baseline 无 onnxruntime port）。
 #
 # 历史教训（commit 3542b0c）：生产档位才暴露的链接缺陷不能只在精简档位下验证；
 # 见 memory-bank/systemPatterns.md「验证必须在『生产档位』全开下进行」。

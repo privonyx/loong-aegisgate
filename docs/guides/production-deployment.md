@@ -78,9 +78,12 @@ docker build -t aegisgate:prod \
   --build-arg ENABLE_PG=ON \
   --build-arg ENABLE_OPENTELEMETRY=ON \
   --build-arg ENABLE_CONTROL_PLANE=ON \
-  --build-arg VCPKG_FEATURES="guard;guard-spm;redis;pg;otel;control-plane" \
+  --build-arg VCPKG_FEATURES="guard-spm;redis;pg;otel;control-plane" \
   .
 ```
+
+> Fetch ONNX Runtime into `third_party/` first (`scripts/fetch-onnxruntime.sh`);
+> the pinned vcpkg baseline has no `onnxruntime` port.
 
 Equivalent for `docker compose` (set in shell or `.env`):
 
@@ -89,7 +92,7 @@ ENABLE_REDIS=ON \
 ENABLE_PG=ON \
 ENABLE_OPENTELEMETRY=ON \
 ENABLE_CONTROL_PLANE=ON \
-VCPKG_FEATURES="guard;guard-spm;redis;pg;otel;control-plane" \
+VCPKG_FEATURES="guard-spm;redis;pg;otel;control-plane" \
   docker compose build
 ```
 

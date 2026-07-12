@@ -113,12 +113,12 @@ assert_contains "A1.5b src/CMakeLists.txt 补链 absl::strings" \
   src/CMakeLists.txt
 # 生产档位默认 AEGIS_VCPKG_FEATURES 与 vcpkg.json features 集合一致
 # （生产构建逻辑已整合进统一的 scripts/build.sh，由构建类型驱动档位）
-assert_contains "A1.6a0 build.sh 生产档位 AEGIS_VCPKG_FEATURES 含 guard" \
-  'AEGIS_VCPKG_FEATURES.*guard;' \
-  scripts/build.sh
 assert_contains "A1.6a build.sh 生产档位 AEGIS_VCPKG_FEATURES 含 guard-spm" \
   'AEGIS_VCPKG_FEATURES.*guard-spm' \
   scripts/build.sh
+assert_contains "A1.6a0 fetch-onnxruntime.sh 含 linux-x64 sha256 pin" \
+  'linux-x64-1\.24\.2' \
+  scripts/fetch-onnxruntime.sh
 assert_contains "A1.6b build.sh 生产档位 AEGIS_VCPKG_FEATURES 含 redis" \
   'AEGIS_VCPKG_FEATURES.*redis' \
   scripts/build.sh

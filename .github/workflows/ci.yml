@@ -21,38 +21,42 @@ jobs:
         include:
           # Default build path (TASK-20260614-01): ENABLE_ONNX + ENABLE_GUARD_MODEL
           # are default-ON, but onnxruntime is no longer git-tracked
-          # (third_party/onnxruntime-* is .gitignore'd; fetch via
-          # scripts/fetch-onnxruntime.sh or vcpkg `guard`). Without either,
-          # ENABLE_ONNX + ENABLE_GUARD_MODEL both gracefully downgrade to OFF.
+          # (third_party/onnxruntime-* is .gitignore'd). Without
+          # scripts/fetch-onnxruntime.sh, both gracefully downgrade to OFF.
           # No guard-spm here → also verifies SentencePiece-absent fallback.
           - build_type: Release
             sanitizer: ""
             cmake_extra: ""
+            fetch_ort: "false"
             label: release
           - build_type: Debug
             sanitizer: "-DENABLE_ASAN=ON -DENABLE_UBSAN=ON"
             cmake_extra: ""
+            fetch_ort: "false"
             label: debug-asan
           - build_type: Debug
             sanitizer: ""
             cmake_extra: "-DENABLE_COVERAGE=ON"
+            fetch_ort: "false"
             label: coverage
-          # Full guard ON: vcpkg `guard` (onnxruntime) + `guard-spm`
-          # (SentencePiece) so ENABLE_GUARD_MODEL stays ON after the
-          # third_party package left the published tree.
+          # Full guard ON: fetch official ORT prebuilt + guard-spm (SentencePiece).
+          # Do NOT use vcpkg feature `guard` — pinned baseline has no onnxruntime port.
           - build_type: Release
             sanitizer: ""
-            cmake_extra: "-DENABLE_CURL=ON -DVCPKG_MANIFEST_FEATURES=guard;guard-spm"
+            cmake_extra: '-DENABLE_CURL=ON -DVCPKG_MANIFEST_FEATURES=guard-spm'
+            fetch_ort: "true"
             label: release-all-features
           # Explicit OFF: verify the pass-through stub compile path still builds
           # when the user opts out of ONNX features entirely.
           - build_type: Release
             sanitizer: ""
             cmake_extra: "-DENABLE_ONNX=OFF -DENABLE_GUARD_MODEL=OFF"
+            fetch_ort: "false"
             label: release-onnx-off
           - build_type: Release
             sanitizer: ""
             cmake_extra: "-DENABLE_OPENTELEMETRY=ON -DVCPKG_MANIFEST_FEATURES=otel"
+            fetch_ort: "false"
             label: release-otel
 
     name: ${{ matrix.label }}
@@ -85,6 +89,17 @@ jobs:
           path: build/vcpkg_installed
           key: vcpkg-${{ runner.os }}-${{ matrix.label }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: vcpkg-${{ runner.os }}-${{ matrix.label }}-
+
+      - name: Cache ONNX Runtime prebuilt
+        if: matrix.fetch_ort == 'true'
+        uses: actions/cache@v4
+        with:
+          path: third_party/onnxruntime-linux-x64-1.24.2
+          key: onnxruntime-linux-x64-1.24.2-43725474ba5663
+
+      - name: Fetch ONNX Runtime
+        if: matrix.fetch_ort == 'true'
+        run: bash scripts/fetch-onnxruntime.sh
 
       - name: Configure CMake
         run: |
