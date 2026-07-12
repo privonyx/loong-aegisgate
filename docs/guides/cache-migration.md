@@ -58,8 +58,21 @@ aborts with exit code 2.
 | 2 | security check failed |
 | 3 | unrecognised format |
 
+## Verification
+
+```bash
+# Dump → restore round-trip
+aegisctl cache dump --output /tmp/a.bin
+sha256sum /tmp/a.bin
+
+# Verify SR2: flip one byte then restore — must exit 2
+dd if=/dev/urandom of=/tmp/a.bin conv=notrunc bs=1 count=1 seek=100
+aegisctl cache restore --input /tmp/a.bin   # → "snapshot tail sha256 mismatch", exit 2
+```
+
+`tests/unit/cache/test_cache_migrator.cpp` already covers the SR2 byte-flip,
+SR8 missing-key, and tenant-allowlist mutation experiments.
+
 ## References
 
-- Design: `docs/specs/2026-05-13-phase6-completion-design.md` §8
-- Plan: `docs/plans/2026-05-13-phase6-completion.md` §6
 - CLI source: `src/cli/aegisctl.cpp` (`cache dump|restore` dispatcher)

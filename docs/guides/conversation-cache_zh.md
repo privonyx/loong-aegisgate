@@ -78,9 +78,3 @@
 - **客户端能不能不传 `conversation_id`？** 能。服务端会自动按消息历史 hash 推导。
 - **`conversation_id` 跨租户被复用怎么办？** 不会出问题：`tenant_id` 永远先于 `conversation_id` 进入 partition_key，租户层是物理隔离。
 - **回落触发后摘要质量会下降吗？** 是的，但 RuleBased 已能覆盖大部分对话场景。可观测 `fallback_count` 趋势，必要时升级 ONNX 模型。
-
-## 相关链接
-
-- 设计文档：`docs/specs/2026-05-13-phase6-completion-design.md` §5
-- 创意决策：`memory-bank/creative/creative-conversation-summarizer.md`
-- 实现计划：`docs/plans/2026-05-13-phase6-completion.md` §4

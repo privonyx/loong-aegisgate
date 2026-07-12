@@ -1,8 +1,38 @@
-# AegisGate 发展蓝图
+# AegisGate 发展蓝图 v2.0
 
-本文档描述 AegisGate 的版本规划和功能路线图，包含社区版持续增强和企业版分阶段推进。
+本文档描述 AegisGate 的 v2.0 战略方向和功能路线图。Phase 0-4 已于 2026-03-26 全部完成，本路线图聚焦于从"功能构建"到"生产验证 → 平台进化 → 生态扩展"的全新战略转型。
 
-> 最后更新：2026-03-21
+> 最后更新：2026-03-30
+> 前序路线图：Phase 0-4 完成记录见文末附录
+
+---
+
+## 战略定位
+
+### 愿景
+
+**成为高性能 AI 网关的事实标准** — 在 LiteLLM (Python) 统治易用性、Portkey (SaaS) 主导托管市场的格局下，AegisGate 以 C++ 原生性能 + 内建安全护栏 + 零外部依赖部署的差异化三角，占据自托管高性能 AI 网关的头部位置。
+
+### 核心战略：从构建到验证，从单机到平台
+
+```
+Phase 0-4 ✅            v2.0 新战略
+┌──────────────┐      ┌──────────────────────────────────────────────┐
+│  功能构建     │  →   │  Phase 5  生产验证与 GA 发布                   │
+│  (13 天完成)  │      │  Phase 6  平台进化（多模态 + 外部集成）         │
+│              │      │  Phase 7  生态与社区建设                       │
+│              │      │  Phase 8  下一代智能（RAG + Agent）             │
+│              │      │  Phase 9  全球化规模部署                       │
+└──────────────┘      └──────────────────────────────────────────────┘
+```
+
+### 差异化三角
+
+| 维度 | AegisGate 优势 | 竞品短板 |
+|------|---------------|---------|
+| **性能** | 47μs 管道延迟（C++ 原生），16 分片锁并发 | LiteLLM: Python GIL 限制；Portkey: SaaS 网络开销 |
+| **安全** | 三层护栏内建（正则→规则→ONNX），Unicode 归一化+编码检测 | LiteLLM: 无内建护栏；Kong: 插件级安全 |
+| **部署** | 社区版零外部依赖单二进制，企业版 Feature Gate 同一镜像 | Portkey: 仅 SaaS；LiteLLM: 依赖 Python 运行时 |
 
 ---
 
@@ -24,13 +54,17 @@ AegisGate 采用 **Open-Core** 模式：
 | 功能 | 社区版 | 企业版 |
 |------|:------:|:------:|
 | 统一 API（OpenAI / Claude / DeepSeek / 豆包 / 通义 / Gemini / Mistral） | ✅ | ✅ |
+| Function Calling / Tool Use 全链路支持 | ✅ | ✅ |
 | ConnectorFactory 零代码新增 provider | ✅ | ✅ |
 | 基础路由（指定模型 / 成本感知） | ✅ | ✅ |
 | 失败降级 + 负载均衡 | ✅ | ✅ |
 | SSE 流式 + 双缓冲 | ✅ | ✅ |
 | 令牌桶限流（per-key） | ✅ | ✅ |
+| Token 优化（压缩 + 智能 max_tokens） | ✅ | ✅ |
 | 语义缓存（LRU + hnswlib） | ✅ | ✅ |
+| 多模态 API 代理（embedding / image / audio） | ✅ ᴺᴱᵂ | ✅ ᴺᴱᵂ |
 | ML 辅助高级路由（成本/质量/延迟优化） | — | ✅ |
+| 外部向量数据库集成（Milvus / Qdrant） | — | ✅ ᴺᴱᵂ |
 
 ### 安全护栏
 
@@ -41,7 +75,9 @@ AegisGate 采用 **Open-Core** 模式：
 | 话题边界（白名单 / 黑名单） | ✅ | ✅ |
 | 出站内容过滤 | ✅ | ✅ |
 | 幻觉检测 | ✅ | ✅ |
-| 审计日志（文件） | ✅ | ✅ |
+| Function Calling 工具调用安全审计 | ✅ | ✅ |
+| 审计日志（文件 + 链式哈希） | ✅ | ✅ |
+| 外部安全 API 集成（OpenAI Moderation / Perspective） | — | ✅ ᴺᴱᵂ |
 | 自定义规则引擎（声明式定义 / 版本管理） | — | ✅ |
 | 合规报告（审计导出 / 留存策略） | — | ✅ |
 
@@ -52,6 +88,7 @@ AegisGate 采用 **Open-Core** 模式：
 | CLI 管理工具（aegisctl） | ✅ | ✅ |
 | Prometheus 指标端点 | ✅ | ✅ |
 | 成本跟踪 | ✅ | ✅ |
+| CHANGELOG + 语义版本管理 | ✅ ᴺᴱᵂ | ✅ ᴺᴱᵂ |
 | Web 管理面板（仪表盘 / 模型管理 / 成本分析） | — | ✅ |
 | 高级告警（Webhook / 钉钉 / 飞书） | — | ✅ |
 
@@ -75,185 +112,278 @@ AegisGate 采用 **Open-Core** 模式：
 | Python (httpx) | ✅ | ✅ |
 | Node.js (native fetch) | ✅ | ✅ |
 | Go (stdlib) | ✅ | ✅ |
+| Java / Kotlin | ᴺᴱᵂ | ᴺᴱᵂ |
+| Rust | ᴺᴱᵂ | ᴺᴱᵂ |
+
+---
+
+## Phase 5：生产验证与 GA 发布
+
+> 从"可以工作"到"值得信赖"。以发布 v1.0 GA 为里程碑，建立 API 稳定性承诺、补全 CHANGELOG、完成生产环境验证。
+
+### 5.1 API 稳定性与版本治理
+
+| 项目 | 内容 | 交付物 |
+|------|------|--------|
+| API 版本策略 | 建立 `/v1/` 前缀语义版本承诺，breaking change 需双版本共存一个 major cycle | 版本策略文档 |
+| CHANGELOG 补全 | 追溯 v0.1.0→当前所有功能变更，建立 Keep a Changelog 规范流程 | `CHANGELOG.md` 完整版 |
+| 弃用策略 | deprecated 注解 + 迁移指南 + 最少两个 minor 版本缓冲期 | 弃用策略文档 |
+| SDK 向后兼容 | SDK 版本与 API 版本对齐，major SDK 版本锁定 API 版本 | SDK 版本矩阵 |
+
+### 5.2 生产环境验证
+
+| 项目 | 内容 | 成功标准 |
+|------|------|---------|
+| 灰度部署方案 | 选 1-2 个内部真实 AI 应用场景接入 AegisGate | 承载真实流量 7 天无 P0 |
+| 长时间压力测试 | 72 小时连续压测：混合读写 + 流式/非流式 + 故障注入 | 零内存泄漏、零崩溃、P99 < 100ms |
+| 混沌工程 | 上游断连 / Redis 宕机 / 磁盘满 / OOM 边界 / 高并发 key 轮转 | 所有场景优雅降级，不丢请求 |
+| 安全渗透测试 | 自动化安全扫描（OWASP ZAP / Nuclei）+ 手动渗透测试 | 零高危/严重漏洞 |
+| 内存安全专项 | ASAN + UBSAN + TSAN 24 小时长跑 + Valgrind memcheck | 零 ASAN/TSAN 报告 |
+
+### 5.3 CI/CD 完善
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| OTEL ON CI 常态化 | OpenTelemetry 条件编译路径加入 CI 矩阵 | 消除 P1 遗留技术债 |
+| Helm Chart 集成测试 | CI 中 kind 集群 + Helm install + smoke test | 部署可靠性验证 |
+| Release 自动化 | Tag 触发自动构建多架构 Docker 镜像 + GitHub Release | 发布效率 |
+| 基准回归门禁 | PR 门禁中运行核心路径 benchmark，性能回退 >10% 阻断 | 性能安全网 |
+
+### 5.4 v1.0 GA 发布清单
+
+| 项目 | 内容 |
+|------|------|
+| 语义版本号 | v1.0.0 正式发布 |
+| 完整 CHANGELOG | v0.1.0→v1.0.0 全部变更记录 |
+| API 稳定性声明 | `/v1/` 端点向后兼容承诺 |
+| 安全公告流程 | `SECURITY.md` + 漏洞报告 + 响应 SLA |
+| License 条款 | 社区版 Apache 2.0 / 企业版商业 License 条款明确 |
+| 官方 Docker 镜像 | `ghcr.io/privonyx/loong-aegisgate:1.0.0` |
+| 升级指南 | v0.x → v1.0 迁移文档 |
+
+---
+
+## Phase 6：平台进化 ✅ 已完成（2026-05-15，TASK-20260513-01）
+
+> 从"LLM Chat 代理"进化为"全模态 AI 平台网关"。覆盖 embedding、image、audio 等多模态端点，集成外部向量数据库和安全 API。
+>
+> **完成证据：** ctest CP+ON 175/175 + vitest 32/32。
+
+### 6.1 多模态 API 代理 ✅ 已完成
+
+| 端点 | 内容 | 价值 |
+|------|------|------|
+| `/v1/embeddings` | 统一 embedding API（OpenAI / Cohere / 本地 ONNX），自动路由到最优模型 | 覆盖 RAG 场景 |
+| `/v1/images/generations` | 统一图像生成（DALL·E / Stability / Midjourney API） | 多模态应用 |
+| `/v1/audio/transcriptions` | 统一语音转写（Whisper / Azure Speech） | 语音场景 |
+| `/v1/audio/speech` | 统一语音合成（OpenAI TTS / Azure / ElevenLabs） | 语音场景 |
+| `/v1/moderations` | 内容审核端点，统一 OpenAI Moderation / Google Perspective | 安全合规 |
+
+**架构设计要点：**
+- 每种模态实现独立的 `ModalityHandler` 接口（CR2 方案 A 瘦 Handler + 胖 Router 落地）
+- 复用现有管道（认证→限流→护栏→路由→审计）
+- 模态级成本追踪和配额管理（`CostTracker.modality` + `ModalityRateLimiter`）
+- 输入/输出大小限制（图像/音频文件体积阈值）
+
+### 6.2 外部向量数据库集成 ✅ 已完成
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| VectorStore 抽象接口 | `VectorStore::insert()/search()/delete()`，与 hnswlib 解耦 | 可扩展性基础 |
+| Milvus 适配器 | gRPC 客户端，支持分区和索引管理 | 百万级向量 |
+| Qdrant 适配器 | REST/gRPC 客户端，支持 payload 过滤 | 百万级向量 |
+| 双模式运行 | 社区版 hnswlib（进程内）/ 企业版 Milvus/Qdrant | 按需扩展 |
+| 缓存迁移工具 | hnswlib → Milvus/Qdrant **离线 dump+restore CLI**（D5=B），SHA-256 + 租户白名单 + API key 三重安全门 | 平滑升级 |
+
+### 6.3 外部安全 API 集成 ✅ 已完成
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| L4 外部安全层 | 架构上新增第 4 层安全检测：外部 API 调用 | 安全纵深 |
+| OpenAI Moderation | 集成 `/v1/moderations` 端点，异步 fire-and-forget 或同步拦截 | 语义级安全 |
+| Google Perspective | Perspective API 毒性/威胁/侮辱评分 | 多维度安全 |
+| 异步模式 | 影子分析模式（不阻塞请求，异步记录），可配置切换为同步拦截 — Epic 4 落地，500ms provider 实测 process() < 10ms | 延迟/安全平衡 |
+| 失败策略 | 外部 API 不可用时 fail-open + 降级到 L1/L2/L3 | 可用性保障 |
+| Shadow audit + 背压 | **SR3** 每次 shadow 扫描必写审计 entry；**SR6** `shadow_max_inflight` atomic counter 防 worker 堆积 | 可观测 + 防止云 API 抖动放大成内部资源耗尽 |
+
+### 6.4 多轮对话缓存升级 ✅ 已完成
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| 对话摘要缓存键 | `SHA-256(tenant_id) + SHA-256(conversation_id) + summary` partition_key V2（**SR1 跨租户硬隔离**） | 避免上下文不同时误命中 + 多租户安全 |
+| 轻量摘要生成 | `CompositeSummarizer`：ONNX 主路径 + RuleBased fallback（CR1 方案 B 装饰器，primary 返空自动回落 + `fallback_count_` 上报） | 零外部依赖 + 运行时容错 |
+| 对话 ID 关联 | 支持 `metadata.conversation_id`（D2=C 客户端优先 + 服务端 SHA-256 历史推导 + request_id 兜底） | 多轮场景 |
+| 缓存淘汰策略 | `ConversationCacheEvictor` 4 因子评分（频次 / 最近性 / 体量 / TTL） | 缓存质量 |
+
+---
+
+## Phase 7：生态与社区建设
+
+> 从"技术产品"到"开发者生态"。降低贡献门槛，建立社区基础设施，完善文档和 SDK。
+
+### 7.1 社区基础设施
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| GitHub Discussions | 启用 Q&A / Ideas / Show and Tell 分区 | 社区交流 |
+| Discord 频道 | 开发者实时交流 + 中英文频道 | 社区粘性 |
+| Good First Issues | 标注 20+ 入门友好的 Issue（文档/测试/小功能） | 降低贡献门槛 |
+| CONTRIBUTING 增强 | 开发环境搭建一键脚本 + 架构导览 + 常见开发任务 Cookbook | 贡献者友好 |
+| 贡献者公约 | Contributor License Agreement (CLA) + Code of Conduct | 开源治理 |
+| 社区治理 | Maintainer 权限分级 + PR Review 流程 + Release 审批 | 可持续运营 |
+
+### 7.2 文档国际化
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| 核心文档英文化 | 快速入门、架构概览、API 参考、部署指南 | 国际社区 |
+| API Reference 自动生成 | Doxygen/Sphinx 从代码注释自动生成 API 文档 | 文档一致性 |
+| 教程系列 | 5 分钟快速入门 / 安全最佳实践 / 性能调优 / 生产部署 / SDK 集成 | 采用率 |
+| 交互式 Playground | 在线 Demo 环境，无需本地安装即可体验 | 降低试用门槛 |
+
+### 7.3 SDK 生产化增强
+
+| SDK | 增强内容 | 价值 |
+|-----|---------|------|
+| **通用增强** | 指数退避重试 + 可配超时 + 连接池复用 + OpenTelemetry 追踪注入 | 生产级可靠性 |
+| **Python** | async/await 原生支持 + Pydantic 类型模型 + streaming iterator | Python 生态融合 |
+| **Node.js** | TypeScript 类型安全 + streaming ReadableStream + 自动重连 | TS 生态融合 |
+| **Go** | context.Context 传播 + 结构化错误 + streaming io.Reader | Go 生态融合 |
+| **Java/Kotlin** ᴺᴱᵂ | OkHttp/Ktor 客户端 + Kotlin coroutines + Spring Boot starter | JVM 生态覆盖 |
+| **Rust** ᴺᴱᵂ | reqwest + tokio async + serde 序列化 + tracing 集成 | Rust 生态覆盖 |
+
+### 7.4 竞品基准对比
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| 标准化基准套件 | 统一测试场景（单请求延迟 / 并发吞吐 / 流式首字 / 缓存命中） | 公平对比 |
+| vs LiteLLM | 单机吞吐、延迟分位数、内存占用对比 | 性能差异化 |
+| vs Portkey | 功能覆盖度 + 安全能力 + 自托管灵活性对比 | 场景差异化 |
+| 对比报告 | 发布在官方文档和博客 | 市场认知 |
+
+---
+
+## Phase 8：下一代智能
+
+> 从"AI 代理网关"到"AI 应用基础设施"。支持 Agent 编排、RAG 管道集成、智能化缓存，为复杂 AI 应用提供基础设施级支持。
+
+### 8.1 Agent 编排基础
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| Tool Registry | 注册和管理可供 AI 调用的工具集，支持版本化 | Agent 基础 |
+| Tool 执行沙箱 | 工具调用安全隔离执行环境（syscall 过滤 + 超时 + 资源限制） | Agent 安全 |
+| 多步编排 | 支持 ReAct / Plan-and-Execute 模式的多步工具调用链 | 复杂 Agent |
+| 工具调用审计 | 每次工具调用的输入/输出/耗时/成本完整记录 | 可追溯性 |
+| 工具级限流 | per-tool 速率限制和并发控制 | 安全防护 |
+
+### 8.2 RAG 管道集成
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| 知识库管理 | 文档上传 → 分块 → embedding → 向量存储管理 API | RAG 基础 |
+| 检索增强阶段 | 新增 `RetrievalStage`：请求到达时检索相关知识注入 context | RAG 管道 |
+| 幻觉检测增强 | 将检索到的事实作为 ground truth 对照 LLM 输出 | 可信度提升 |
+| 引用追踪 | 输出中标注信息来源（哪个文档的哪个片段） | 可验证性 |
+
+### 8.3 智能化缓存 2.0
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| 语义压缩缓存 | 对长响应进行语义压缩存储，命中时按需展开 | 缓存容量 |
+| 预测性缓存预热 | 基于历史查询模式预测热门查询，提前填充缓存 | 命中率 |
+| 跨租户匿名缓存 | 去除租户标识的通用知识缓存层，在安全策略允许的前提下共享 | 全局效率 |
+| 缓存质量反馈 | 用户对缓存命中结果的满意度反馈，动态调整阈值 | 自适应 |
+
+### 8.4 高级可观测性
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| AI 调用成本归因 | 按应用 / 功能模块 / 用户粒度的成本归因分析 | 成本优化 |
+| 异常检测 | 基于统计模型的异常请求模式检测（突增/突降/异常分布） | 主动运维 |
+| 质量趋势监控 | 模型输出质量随时间变化的趋势追踪和告警 | 模型退化预警 |
+| 成本优化建议 | 基于使用模式自动推荐最优路由策略和模型组合 | 智能运维 |
+
+---
+
+## Phase 9：全球化规模部署
+
+> 从"单集群"到"全球分布式"。支持多区域部署、边缘缓存、合规数据驻留。
+
+### 9.1 多区域部署
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| 区域感知路由 | 请求就近路由到最低延迟的 AI 提供商区域端点 | 延迟优化 |
+| 跨区域缓存同步 | 语义缓存跨区域异步复制，热数据全球可用 | 全局命中率 |
+| 数据驻留策略 | 按租户配置数据驻留区域（审计日志、缓存数据不跨区） | 合规要求 |
+| 多集群联邦 | 中央控制面 + 区域数据面架构 | 全球规模 |
+
+### 9.2 边缘部署
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| 轻量级边缘节点 | 精简 AegisGate binary（仅认证+限流+缓存+路由） | 边缘延迟 |
+| 边缘缓存 | CDN 层面的语义缓存命中 | 极低延迟 |
+| 边缘安全 | 在边缘执行基础安全检查，可疑请求回源深度检查 | 安全+性能 |
+
+### 9.3 高级合规
+
+| 项目 | 内容 | 价值 |
+|------|------|------|
+| SOC 2 合规框架 | 安全控制映射 + 证据收集自动化 | 企业合规 |
+| GDPR 支持 | 数据删除 API + 访问权请求 + 同意管理 | 欧洲市场 |
+| ISO 27001 对齐 | 信息安全管理体系控制项映射 | 国际认证 |
+| 审计报告自动化 | 定时生成合规报告 + 异常自动通知 | 合规效率 |
 
 ---
 
 ## 发展阶段总览
 
-核心策略：**先还债、再增强、后扩展**
-
 ```
-Phase 0  夯实根基        技术债务清理 + 生产就绪加固
+Phase 0-4 ✅ 已完成      功能构建基础
    │
-Phase 1  社区版进化      可观测性深化 + 安全升级 + 缓存进化 + 开发者体验
+Phase 5  生产验证 + GA    API 稳定性 + 生产验证 + CI/CD + v1.0 发布
    │
-Phase 2  企业版基础      P2 RBAC 多租户 + P3 Web 管理面板
+Phase 6  平台进化         多模态 + 外部向量 DB + 安全 API + 缓存升级
    │
-Phase 3  企业版高级      P4 SSO + P5 高级功能
+Phase 7  生态与社区       社区基础 + 文档国际化 + SDK 增强 + 竞品对比
    │
-Phase 4  规模化与生态    P6 集群部署 + 插件系统 + 生态建设
+Phase 8  下一代智能       Agent 编排 + RAG 集成 + 智能缓存 + 高级可观测
+   │
+Phase 9  全球化规模       多区域 + 边缘部署 + 高级合规
 ```
 
----
+### 复杂度与技术栈要求
 
-## Phase 0：夯实根基（2026 Q2 前半）
-
-> 消除已知技术债务，为后续开发建立坚实基础。不增加新功能，专注于修内功。
-
-### 0.1 技术债务清理
-
-| 编号 | 债务 | 方案 | 预期收益 |
-|------|------|------|---------|
-| TD-AuditSync | AuditLogger 同步 INSERT 57K 行后退化 56x | 异步批量写入：后台线程 + 环形缓冲区，每 100ms 或 1000 条批量 INSERT | 写入延迟从 1.7ms 降回 <50μs |
-| TD-CBLock | CircuitBreaker 单锁不可扩展 | per-model 独立 mutex（unordered_map<string, ModelState>） | 8 线程吞吐提升 ~7x |
-| TD-MetricsAlloc | Counter DiffLabels 路径字符串拼接开销 | LabelSet 预计算 hash key 并缓存 | 热路径减少一次 string alloc |
-| TD-UpstreamBuf | Drogon HttpClient 无流式回调，LLM 响应先缓冲 | 调研 Drogon 最新版或引入 libcurl multi / Boost.Beast 作为可选上游客户端 | 真正的端到端流式，降低首字延迟 |
-
-### 0.2 生产就绪加固
-
-| 项目 | 内容 |
-|------|------|
-| 优雅关闭 | SIGTERM/SIGINT 信号处理 → 停止接收新请求 → 等待在途请求完成（超时 30s）→ flush 缓冲区 → 关闭存储连接 → 退出 |
-| 健康检查增强 | `/health` 区分 liveness（进程存活）和 readiness（依赖就绪：SQLite 连接、ONNX 模型加载） |
-| 配置热加载 | `SIGHUP` 或 `/admin/reload` 触发配置重新加载（模型列表、安全规则、限流参数），不重启进程 |
-| Dockerfile | 多阶段构建：builder 阶段编译 + runtime 阶段仅含二进制和 ONNX 模型，基于 distroless 或 alpine |
-| docker-compose | 单机一键启动模板：aegisgate + SQLite 卷映射 + Prometheus + Grafana 仪表盘模板 |
-| Chaos 测试 | 模拟上游超时、连接断开、错误率飙升场景的集成测试，验证熔断/降级/限流行为 |
-
----
-
-## Phase 1：社区版进化（2026 Q2 后半）
-
-> 提升社区版的可观测性、安全深度、缓存智能、开发者体验，保持社区版的竞争力和吸引力。
-
-### 1.1 可观测性深化
-
-| 项目 | 内容 | 价值 |
-|------|------|------|
-| OpenTelemetry Trace | 集成 opentelemetry-cpp SDK，每个请求生成 TraceID，每个 PipelineStage 生成 Span | 请求链路可视化，快速定位瓶颈 |
-| Trace 上下文传播 | 入站请求携带 `traceparent` header 时继承，出站请求向上游传播 TraceID | 跨服务追踪 |
-| 结构化日志关联 | spdlog 输出中嵌入 trace_id/span_id 字段 | 日志-指标-链路三支柱打通 |
-| Grafana 仪表盘模板 | 预置 JSON 仪表盘：QPS、延迟分位数、缓存命中率、安全拦截率、成本分布、Stage 耗时 | 开箱即用的监控 |
-| 请求回放 | 审计日志导出为可重放格式，`aegisctl replay` 回放历史请求 | 问题复现 |
-
-### 1.2 安全护栏升级
-
-| 项目 | 内容 | 价值 |
-|------|------|------|
-| L3 模型级安全分类 | 引入 Llama Guard 3 / ShieldGemma ONNX 量化模型作为可选第三层检测（`ENABLE_GUARD_MODEL=ON`） | 对抗语义级注入攻击 |
-| Unicode 规范化 | 入站护栏前增加 NFKC 规范化预处理，统一视觉相似字符（全角/半角/同形字/组合字符） | 防御 Unicode 混淆攻击 |
-| 编码检测与解码 | 检测用户输入中的 Base64、Hex、URL 编码片段，解码后二次安全检查 | 防御编码绕过 |
-| 多语言注入模式 | 扩展注入检测规则，覆盖中文、日文、韩文、俄文等常见注入模式 | 国际化安全覆盖 |
-| 频率异常检测 | per-key 追踪被拦截请求频率，短时间内多次触发安全护栏的 key 自动降级限流 | 主动防御 |
-| 安全规则热加载 | `config/rules/*.yaml` 支持运行时热加载，无需重启 | 快速响应新威胁 |
-
-### 1.3 语义缓存进化
-
-| 项目 | 内容 | 价值 |
-|------|------|------|
-| 多轮对话感知 | 缓存键升级为"对话摘要"（hash(system_prompt) + embedding(last_message)） | 避免上下文不同的请求被错误命中 |
-| 缓存统计端点 | `/cache/stats` 暴露命中率、条目数、平均相似度、Top-K 热门查询 | 可观测，调优依据 |
-| 自适应阈值 | 基于历史命中反馈动态调整相似度阈值 | 提高缓存质量 |
-| 选择性缓存 | 按 model/api_key/请求特征（如 temperature > 0.8）决定是否缓存 | 减少无效缓存 |
-| 缓存预热增强 | 支持从 JSON 文件导入预定义 QA 对 | 重启后立即可用 |
-
-### 1.4 开发者体验
-
-| 项目 | 内容 | 价值 |
-|------|------|------|
-| aegisctl 增强 | `config validate` 配置校验、`bench` 内置压测、`logs tail` 实时日志流 | 运维效率 |
-| OpenAPI 交互式文档 | 内置 Swagger UI 或 Scalar 在 `/docs` 端点 | 降低集成门槛 |
-| SDK 测试模式 | 各语言 SDK 内置 mock server 支持 | SDK 用户体验 |
-| 错误码体系 | 统一错误码规范（`AEGIS-1xxx` 认证、`AEGIS-2xxx` 限流、`AEGIS-3xxx` 安全、`AEGIS-4xxx` 路由） | 调试效率 |
-| 教程与最佳实践 | 快速入门教程、性能调优指南、安全最佳实践、常见问题排查手册 | 降低采用门槛 |
-
----
-
-## Phase 2：企业版基础（2026 Q3）
-
-> P1 存储基础已在 TASK-20260319-02/03 中完成（SQLite + Redis + PG + 存储抽象层 + 迁移工具）。
-
-### 2.1 P2 RBAC + 多租户
-
-- RBAC 角色权限（SuperAdmin / TenantAdmin / Developer / Viewer）
-- 多租户隔离（每个请求绑定 tenant，数据按 tenant 分区）
-- 租户级配额与限流
-- API Key 关联角色与租户
-- 租户级模型白名单（每个租户可配置允许使用的模型列表）
-- 租户级成本上限（月度/日度硬上限，超限自动拒绝）
-- API Key 生命周期管理（创建、轮转、吊销、过期时间，`aegisctl key` 子命令）
-- 审计日志按租户查询（PersistentStore 层面 `WHERE tenant_id = ?` 过滤）
-
-### 2.2 P3 Web 管理面板
-
-- React + TypeScript + Vite 前端
-- 仪表盘（概览 / 实时统计）
-- 模型管理、用户管理
-- 可视化规则编辑器
-- 成本分析仪表盘
-- 实时 WebSocket 仪表盘（请求数/延迟/安全事件推送，不依赖轮询）
-- 拖拽式安全规则编辑器（实时预览匹配效果）
-- 配置变更审计（所有管理面板操作记录审计日志，支持变更回滚）
-
----
-
-## Phase 3：企业版高级（2026 Q3-Q4）
-
-### 3.1 P4 SSO 集成
-
-- OIDC / OAuth2 身份提供商集成（Okta、Azure AD、Keycloak 等）
-- 自动映射外部身份到本地租户与角色
-- SCIM 用户同步（从企业 IdP 自动同步用户和组）
-- MFA 二次认证（管理面板关键操作强制 TOTP 二次验证）
-- 会话管理（在线用户列表、强制下线、会话超时策略）
-
-### 3.2 P5 高级功能
-
-- 自定义规则引擎增强（YAML 声明式定义 / 热加载 / 版本管理）
-- 高级告警（Webhook 通用通道 / 钉钉 / 飞书 / Slack 适配器）
-- 合规报告（定时导出 / 留存策略 / CSV 导出）
-- ML 辅助智能路由（基于历史数据的成本/质量/延迟三维优化）
-- A/B 测试路由（按流量百分比将请求路由到不同模型，对比质量/成本/延迟）
-- Prompt 模板管理（企业级 system prompt 版本管理、A/B 测试、回滚）
-- 输出质量评分（基于规则 + 轻量模型对 LLM 输出自动质量评分）
-- 用量预测（基于历史数据的用量趋势预测和成本预估）
-
----
-
-## Phase 4：规模化与生态（2026 Q4 - 2027 Q1）
-
-### 4.1 P6 集群部署
-
-- 多节点部署（Redis 共享状态总线）
-- 节点发现与健康检查
-- 水平扩展（无状态设计 + 共享存储）
-- Kubernetes Helm Chart（HPA 自动伸缩、PDB 滚动更新、ConfigMap 配置管理）
-- 灰度发布（节点级灰度：新版本先部署到 1 个节点，验证后全量推送）
-- 分布式追踪融合（集群环境下 OpenTelemetry Trace 跨节点传播）
-
-### 4.2 生态系统建设
-
-| 项目 | 内容 | 价值 |
-|------|------|------|
-| 插件系统 | `PluginStage` 接口，支持动态加载 `.so` 插件作为 Pipeline Stage | 社区可扩展性 |
-| 社区规则市场 | 托管社区贡献的安全规则集（行业模板：金融/医疗/教育），`aegisctl rules install` 一键导入 | 降低安全配置门槛 |
-| 多语言 SDK 扩展 | Java/Kotlin、Rust、C#/.NET SDK | 覆盖更多技术栈 |
-| Terraform Provider | 基础设施即代码管理 AegisGate 配置和部署 | DevOps 集成 |
-| VS Code 扩展 | 配置文件 YAML schema 补全 + 安全规则语法高亮 + 实时连接测试 | 开发者体验 |
+| Phase | 核心技能要求 | 侵入性 |
+|-------|-------------|--------|
+| Phase 5 | CI/CD 工程、压力测试、安全审计 | 低（主要文档和配置） |
+| Phase 6 | gRPC 客户端、多模态 API、向量数据库 | 中（新增模块，复用管道） |
+| Phase 7 | 技术写作、SDK 多语言、社区运营 | 低（主要文档和 SDK） |
+| Phase 8 | Agent 编排、RAG 架构、ML 工程 | 高（核心管道扩展） |
+| Phase 9 | 分布式系统、全球网络、合规工程 | 高（架构级变更） |
 
 ---
 
 ## 关键里程碑
 
-| 里程碑 | 目标日期 | 标志性成果 |
-|--------|---------|----------|
-| v0.2 — 生产就绪 | 2026-04 | 技术债务清零 + Docker 一键部署 + 优雅关闭 + Chaos 测试通过 |
-| v0.3 — 可观测性 | 2026-05 | OpenTelemetry 全链路追踪 + Grafana 预置仪表盘 |
-| v0.4 — 安全深度 | 2026-06 | L3 模型级安全分类 + Unicode 规范化 + 编码检测 + 安全规则热加载 |
-| v1.0 — 社区版 GA | 2026-07 | 社区版功能冻结，通过生产环境验证，文档完整，API 稳定承诺 |
-| v1.1 — 企业版 Beta | 2026-09 | RBAC + 多租户 + Web 管理面板 |
-| v1.2 — 企业版 GA | 2026-11 | SSO + 高级功能 + 集群部署 |
-| v2.0 — 生态 | 2027-Q1 | 插件系统 + 规则市场 + Terraform Provider |
+| 里程碑 | 状态 | 标志性成果 |
+|--------|------|----------|
+| v0.1.0 — 首个发布 | ✅ 完成 | 统一 AI 网关 + 安全护栏 + 语义缓存 + SDK |
+| v0.2.0 — 多 Provider | ✅ 完成 | DeepSeek/豆包 + ConnectorFactory 重构 |
+| v0.3.0 — 生产就绪 | ✅ 完成 | 技术债清零 + Docker + 优雅关闭 + Chaos 测试 |
+| v0.4.0 — 社区版进化 | ✅ 完成 | OpenTelemetry + 安全升级 + 缓存进化 + 开发者体验 |
+| v0.5.0 — 企业版基础 | ✅ 完成 | RBAC + 多租户 + Web 管理面板 |
+| v0.6.0 — 企业版高级 | ✅ 完成 | SSO + 规则引擎 + ML 路由 + A/B 测试 + 质量评分 |
+| v0.7.0 — 规模化 | ✅ 完成 | 集群部署 + 插件系统 + 规则市场 |
+| v0.8.0 — 安全加固 | ✅ 完成 | Ed25519 License + 审计加密 + IP 允许列表 |
+| v0.9.0 — AI 增强 | ✅ 完成 | Function Calling + Token 优化系统 |
+| **v1.0.0 GA — 正式发布** | **✅ 完成** | **API 稳定承诺 + Release 自动化 + Agent 编排 + RAG + 智能缓存 2.0 + 高级可观测** |
+| **v1.3 — 社区版增强** | **✅ 完成** | **5 语言 SDK（+Java +Rust）+ 竞品基准对比报告 + 社区治理** |
+| v2.1 — 全球部署 | 🔜 计划 | 多区域路由 + 跨区缓存同步 + 合规框架 |
+
+> 详细版本变更记录请参阅 [CHANGELOG.md](../CHANGELOG.md)，API 稳定性策略请参阅 [VERSIONING.md](../VERSIONING.md)。
 
 ## 资源估算
 
@@ -270,18 +400,54 @@ Phase 4  规模化与生态    P6 集群部署 + 插件系统 + 生态建设
 ## 依赖关系
 
 ```
-Phase 0.1 技术债务清理 ──→ Phase 1.1 可观测性深化 ──→ Phase 2.1 RBAC + 多租户
-Phase 0.2 生产就绪加固 ──→ Phase 1.4 开发者体验       │
-                                                      ↓
-Phase 1.2 安全护栏升级 ──→ Phase 2.1 RBAC + 多租户    Phase 2.2 Web 管理面板
-Phase 1.3 语义缓存进化 ──→ Phase 3.2 高级功能              │
-                                                      ↓
-                          Phase 3.1 SSO 集成 ────→ Phase 4.1 集群部署
-                          Phase 3.2 高级功能 ────→ Phase 4.1 集群部署
-                                                      │
-                                                      ↓
-                                                 Phase 4.2 生态系统
+Phase 5.1 API 稳定性 ──────→ Phase 5.4 v1.0 GA
+Phase 5.2 生产验证   ──────→ Phase 5.4 v1.0 GA
+Phase 5.3 CI/CD 完善 ──────→ Phase 5.4 v1.0 GA
+                                    │
+              ┌─────────────────────┼─────────────────────┐
+              ↓                     ↓                     ↓
+Phase 6.1 多模态 API        Phase 6.2 外部向量 DB    Phase 6.3 外部安全 API
+Phase 6.4 对话缓存升级             │
+              │                     │
+              ↓                     ↓
+       Phase 7.1-7.4          Phase 8.1 Agent 编排
+       生态与社区建设          Phase 8.2 RAG 集成
+                               Phase 8.3 智能缓存 2.0
+                                    │
+                                    ↓
+                              Phase 9.1-9.3
+                              全球化规模部署
 ```
+
+---
+
+## 技术风险与缓解
+
+| 风险 | 影响 | 缓解策略 |
+|------|------|---------|
+| C++ 社区贡献门槛高 | 生态增长受限 | SDK/文档/CLI 用其他语言接受贡献；核心 C++ 维护者招募 |
+| 多模态 API 变化快 | 维护成本 | 抽象 ModalityHandler 接口，provider 变更不影响核心 |
+| 向量 DB 生态碎片化 | 适配成本 | VectorStore 抽象接口，按用户需求优先适配 Top 2 |
+| Agent 安全风险 | 工具调用滥用 | 沙箱隔离 + 审批机制 + 资源限制三层防护 |
+| 全球部署网络复杂度 | 运维难度 | 先单区域集群验证，再渐进式多区域 |
+
+---
+
+## 附录：Phase 0-4 完成记录
+
+| Phase | 完成日期 | 核心交付 |
+|-------|---------|---------|
+| Phase 0 夯实根基 | 2026-03-21 | 技术债清零 + Docker + Chaos 测试 |
+| Phase 1 社区版进化 | 2026-03-22 | OTEL 追踪 + 安全升级 + 缓存进化 + 开发者体验 |
+| Phase 2 企业版基础 | 2026-03-22 | RBAC 多租户 + Web 管理面板 |
+| Phase 3 企业版高级 | 2026-03-26 | SSO + 规则引擎 + ML 路由 + A/B 测试 + 质量评分 + 用量预测 |
+| Phase 4.1 集群部署 | 2026-03-26 | RedisStateStore + Helm Chart + docker-compose 集群 |
+| Phase 4.2 生态系统 | 2026-03-26 | 插件系统 (dlopen .so) + 规则市场 (aegisctl rules) |
+| 补充: Token 优化 | 2026-03-28 | PromptCompressor + SmartMaxTokens + TokenEstimator |
+| 补充: 安全保证 | 2026-03-29 | Ed25519 License + 审计链哈希 + 审计加密 + IP 白名单 |
+| 补充: Function Calling | 2026-03-30 | Tool Use 全链路支持（类型系统+连接器+Runtime+护栏+缓存） |
+
+**96/96 测试通过。** 源码 171 文件 ~29,000 行 C++，测试 100 文件 ~16,000 行。
 
 ---
 
@@ -295,8 +461,9 @@ Phase 1.3 语义缓存进化 ──→ Phase 3.2 高级功能              │
 
 ## 后续路线
 
-本文档是初始版本路线图。后续已扩展为三代并存：
+本文档记录 Phase 5-8 的战略与交付。后续路线分为两个并行轨道：
 
-- **v2.0**（生产验证 → 平台进化 → 生态扩展）→ [ROADMAP.md](ROADMAP.md)
-- **v3.0**（全球化 × 平台化 × 智能化 / 工程路线）→ [ROADMAP_v3.md](ROADMAP_v3.md)
-- **v4.0**（AegisOps 产品 / 商业化叠加）→ [ROADMAP_v4_zh.md](ROADMAP_v4_zh.md) · [ROADMAP_v4.md](ROADMAP_v4.md)
+- **开源核心工程路线**：全球化 × 平台化 × 智能化（Phase 9-14）
+- **产品 / 商业化叠加路线**：品牌升级 → 行业合规包 → SaaS 控制平面
+
+两条轨道并存：工程与商业化叠加互不取代。

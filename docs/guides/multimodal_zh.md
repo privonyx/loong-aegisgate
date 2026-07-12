@@ -87,9 +87,3 @@ N=1 时所有策略统一走 `front()` 快速路径，O(1) 无策略开销。N=0
 - **N=1 时和原来 passthrough 比有性能差吗？** 几乎没有。Router 的 fast path 是 `vector::front()` + 一次虚函数调用，O(1)。
 - **`ModalityRateLimiter` 现在的 yaml 配额会被强制吗？** 暂时不会（Epic 5.1c 待接入）。但配额已被读取并日志汇总。
 - **能不能用别的 provider 而不是 OpenAI？** 当前装配代码硬编码 `findByProvider("openai")`。要支持别家 provider，扩展 `GatewayRuntime::initialize` 的 modality wire 段（参照 OpenAI adapter 模式新增 adapter）。
-
-## 相关链接
-
-- 设计文档：`docs/specs/2026-05-13-phase6-completion-design.md` §6
-- 创意决策：`memory-bank/creative/creative-modality-handler.md`（CR2 方案 A 推导过程）
-- 实现计划：`docs/plans/2026-05-13-phase6-completion.md` §5

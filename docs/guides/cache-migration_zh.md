@@ -89,6 +89,4 @@ aegisctl cache restore --input /tmp/a.bin   # → "snapshot tail sha256 mismatch
 
 ## 相关链接
 
-- 设计文档：`docs/specs/2026-05-13-phase6-completion-design.md` §8
-- 实现计划：`docs/plans/2026-05-13-phase6-completion.md` §6
 - CLI 源：`src/cli/aegisctl.cpp`（`cache dump|restore` dispatcher）

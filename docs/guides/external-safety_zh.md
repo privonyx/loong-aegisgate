@@ -94,8 +94,3 @@ ExternalSafetyStage: L4 active with 1 provider(s), mode=any, fail=open, shadow=o
   - `Sr6InflightCapSkipsOverflow`(SR6 背压)
   - `SlowProviderStaysUnderTenMs`(Epic 4.3 集成: 500ms provider, < 10ms process)
   - `BurstStaysFireAndForget`(Epic 4.3: 5 burst < 50ms)
-
-## 相关链接
-
-- 设计文档：`docs/specs/2026-05-13-phase6-completion-design.md` §7
-- 实现计划：`docs/plans/2026-05-13-phase6-completion.md` §7
