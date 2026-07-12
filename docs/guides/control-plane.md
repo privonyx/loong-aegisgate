@@ -4,7 +4,7 @@
 > Available: v1.1+ (optional; build with `-DENABLE_CONTROL_PLANE=ON`)
 > Binaries: `aegisgate-control-plane` (server) + `aegisctl config …` (client)
 > gRPC contract: `api/control-plane/proto/control_plane/v1/control_plane.proto`
-> OpenAPI view: [`openapi/control-plane-v1.yaml`](../../openapi/control-plane-v1.yaml)
+> OpenAPI view: [`control-plane-v1.yaml`](../../api/control-plane/openapi/control-plane-v1.yaml)
 
 The AegisGate **control plane** decouples *“who is allowed to change the
 gateway’s YAML”* from *“when the change actually goes live.”* Every update
@@ -270,12 +270,12 @@ plane (Phase 7).
   reconciling CRs against the control plane.
 - **Phase 9.5** — Multi-tenant surfaces with per-tenant reviewers.
 
-See [`docs/ROADMAP_v3.md`](../ROADMAP_v3.md) for the full plan.
+See [`docs/ROADMAP.md`](../ROADMAP.md) for the full plan.
 
 ## Reference material
 
 - Proto contract: [`api/control-plane/proto/control_plane/v1/control_plane.proto`](../../api/control-plane/proto/control_plane/v1/control_plane.proto)
-- OpenAPI view: [`openapi/control-plane-v1.yaml`](../../openapi/control-plane-v1.yaml)
+- OpenAPI view: [`control-plane-v1.yaml`](../../api/control-plane/openapi/control-plane-v1.yaml)
 - Smoke test: [`scripts/test-control-plane-local.sh`](../../scripts/test-control-plane-local.sh)
 - Dev certs: [`scripts/gen-control-plane-dev-certs.sh`](../../scripts/gen-control-plane-dev-certs.sh)
 - Sync guard: [`scripts/verify-openapi-sync.sh`](../../scripts/verify-openapi-sync.sh)

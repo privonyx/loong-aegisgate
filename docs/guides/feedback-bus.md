@@ -203,4 +203,4 @@ the YAML key and the Prometheus counter starts populating.
 - Specification: `docs/specs/2026-04-17-phase11.0-feedback-bus-design.md`
 - Lock ordering: `docs/LOCK_ORDERING.md` (Layer 3)
 - Public header: `include/aegisgate/feedback_event.h`
-- v3.0 roadmap: `docs/ROADMAP_v3.md` §6 Phase 11
+- Roadmap: `docs/ROADMAP.md`

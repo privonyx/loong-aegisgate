@@ -236,4 +236,3 @@ auto conformance = aegisgate::runConformanceChecks(*manifest);
 - [Provider Manifest 规范](../../api/providers/manifest.md)
 - [JSON Schema](../../api/providers/provider.schema.json)
 - [OpenAI 兼容性矩阵](../openai-compat-matrix.md)
-- [设计文档](../specs/2026-04-17-phase10.1-provider-manifest-design.md)

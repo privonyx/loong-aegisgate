@@ -198,4 +198,4 @@ subscriber_count     当前订阅者数量
 - 设计：`docs/specs/2026-04-17-phase11.0-feedback-bus-design.md`
 - 锁分层：`docs/LOCK_ORDERING.md`（Layer 3）
 - 公共头：`include/aegisgate/feedback_event.h`
-- v3.0 路线图：`docs/ROADMAP_v3.md` §6 Phase 11
+- 路线图：`docs/ROADMAP.md`

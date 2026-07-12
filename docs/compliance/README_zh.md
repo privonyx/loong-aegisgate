@@ -9,7 +9,7 @@
 是阶段 2（TASK-W2）的交付物。
 
 **最后更新：** 2026-05-20
-**姊妹文档：** [愿景](../positioning/aegisops-vision_zh.md) · [路线图 v4](../ROADMAP_v4_zh.md) · [English](README.md)
+**姊妹文档：** [愿景](../positioning/aegisops-vision_zh.md) · [路线图 v4](../ROADMAP_zh.md) · [English](README.md)
 
 ---
 
@@ -225,6 +225,6 @@ NIST AI RMF 1.0、SOC 2 Type II、HIPAA、GDPR 第 22 条、以及行业法规
 ## 另参见
 
 - [AegisOps 愿景](../positioning/aegisops-vision_zh.md) — 为什么我们做这件事
-- [路线图 v4](../ROADMAP_v4_zh.md) — 阶段 2 / 阶段 3 合规包里程碑
+- [路线图 v4](../ROADMAP_zh.md) — 阶段 2 / 阶段 3 合规包里程碑
 - [架构指南](../guides/architecture_zh.md) — 整体架构含审计链
 - [控制面指南](../guides/control-plane_zh.md) — 版本化与双人审批 workflow

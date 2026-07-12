@@ -10,7 +10,7 @@
 
 **Status:** Vision document (Stage 1 of 3-stage repositioning, TASK-20260520-01)
 **Last updated:** 2026-05-20
-**Sister documents:** [Compliance Mapping](../compliance/README.md) · [Roadmap v4](../ROADMAP_v4.md) · [中文版](aegisops-vision_zh.md)
+**Sister documents:** [Compliance Mapping](../compliance/README.md) · [Roadmap v4](../ROADMAP.md) · [中文版](aegisops-vision_zh.md)
 
 ---
 
@@ -115,7 +115,7 @@ across separate tools:
 
 ## 3. Five-Year Roadmap
 
-> Detailed milestones live in [ROADMAP_v4.md](../ROADMAP_v4.md). Brief
+> Detailed milestones live in [ROADMAP.md](../ROADMAP.md). Brief
 > overview here:
 
 | Year | Theme | Primary deliverables |
@@ -215,7 +215,7 @@ are where AegisOps charges.**
 ### 6.3 Commercial Terms
 
 Detailed pricing, license tiers, and commercial terms are stage-3 scope
-(see [ROADMAP_v4.md](../ROADMAP_v4.md) Stage 3). Current commitment:
+(see [ROADMAP.md](../ROADMAP.md) Stage 3). Current commitment:
 
 - All API endpoints, file formats, and on-the-wire protocols stay backward
   compatible across community and enterprise editions
@@ -238,7 +238,7 @@ placeholder._
 
 - [Compliance Mapping](../compliance/README.md) — EU AI Act / ISO 42001 /
   China measures readiness mapping (skeleton)
-- [Roadmap v4](../ROADMAP_v4.md) — Detailed five-year milestones
+- [Roadmap v4](../ROADMAP.md) — Detailed five-year milestones
 - [Architecture](../guides/architecture.md) — AegisGate technical
   architecture
 - [Control Plane Guide](../guides/control-plane.md) — Versioning + approval

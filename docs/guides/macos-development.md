@@ -1,7 +1,6 @@
 # macOS（Apple Silicon）开发指南
 
 本指南介绍如何在 macOS（Apple Silicon / `arm64-osx`）上原生编译与开发 AegisGate。
-跨平台改造背景见 [`docs/macos-development-feasibility.md`](../macos-development-feasibility.md)。
 
 > 适用范围：仅 Apple Silicon（M 系列，`arm64-osx`）原生编译。Intel `x64-osx` 未在本轮支持范围内。
 

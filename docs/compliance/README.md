@@ -14,7 +14,7 @@ Detailed clause-by-clause mappings, control evidence, and audit-ready
 reports are Stage 2 (TASK-W2) deliverables.
 
 **Last updated:** 2026-05-20
-**Sister documents:** [Vision](../positioning/aegisops-vision.md) · [Roadmap v4](../ROADMAP_v4.md) · [中文版](README_zh.md)
+**Sister documents:** [Vision](../positioning/aegisops-vision.md) · [Roadmap v4](../ROADMAP.md) · [中文版](README_zh.md)
 
 ---
 
@@ -245,7 +245,7 @@ substitute for one. Stage 2 / TASK-W2 deliverables will include:
 ## See Also
 
 - [AegisOps Vision](../positioning/aegisops-vision.md) — Why we built this
-- [Roadmap v4](../ROADMAP_v4.md) — Stage 2 / Stage 3 compliance pack
+- [Roadmap v4](../ROADMAP.md) — Stage 2 / Stage 3 compliance pack
   milestones
 - [Architecture guide](../guides/architecture.md) — overall architecture
   including audit chain

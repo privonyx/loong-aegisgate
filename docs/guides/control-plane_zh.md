@@ -4,7 +4,7 @@
 > 适用版本：v1.1+（可选特性；构建时附加 `-DENABLE_CONTROL_PLANE=ON`）
 > 二进制：`aegisgate-control-plane`（服务端）+ `aegisctl config …`（客户端）
 > gRPC 契约：`api/control-plane/proto/control_plane/v1/control_plane.proto`
-> OpenAPI 视图：[`openapi/control-plane-v1.yaml`](../../openapi/control-plane-v1.yaml)
+> OpenAPI 视图：[`control-plane-v1.yaml`](../../api/control-plane/openapi/control-plane-v1.yaml)
 
 AegisGate **控制面**把 "谁能改网关的 YAML" 与 "改动什么时候生效" 彻底拆开。每一次改动都要经过 `apply`（提交）、第二位运维人员 `approve`（审批，SR5 强制要求 *submitter ≠ reviewer*）、显式 `activate`（激活），并写入可追溯的审计链。回滚到此前 ACTIVE 的版本只需一条命令，且**不再走一次审批流程**（R2 豁免）。
 
@@ -225,12 +225,12 @@ scripts/gen-control-plane-dev-certs.sh /etc/aegisgate/certs/dev
 - **Phase 9.4** —— Kubernetes Operator（`aegisgateconfigs.aegisgate.io`），从 CR 收敛到控制面。
 - **Phase 9.5** —— 多租户接入面、按租户分配审批人。
 
-完整规划请看 [`docs/ROADMAP_v3.md`](../ROADMAP_v3.md)。
+完整规划请看 [`docs/ROADMAP_zh.md`](../ROADMAP_zh.md)。
 
 ## 参考资料
 
 - gRPC 契约：[`api/control-plane/proto/control_plane/v1/control_plane.proto`](../../api/control-plane/proto/control_plane/v1/control_plane.proto)
-- OpenAPI 视图：[`openapi/control-plane-v1.yaml`](../../openapi/control-plane-v1.yaml)
+- OpenAPI 视图：[`control-plane-v1.yaml`](../../api/control-plane/openapi/control-plane-v1.yaml)
 - 集成脚本：[`scripts/test-control-plane-local.sh`](../../scripts/test-control-plane-local.sh)
 - 开发证书：[`scripts/gen-control-plane-dev-certs.sh`](../../scripts/gen-control-plane-dev-certs.sh)
 - OpenAPI ↔ proto 校验：[`scripts/verify-openapi-sync.sh`](../../scripts/verify-openapi-sync.sh)
