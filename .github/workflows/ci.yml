@@ -20,10 +20,11 @@ jobs:
       matrix:
         include:
           # Default build path (TASK-20260614-01): ENABLE_ONNX + ENABLE_GUARD_MODEL
-          # are now default-ON. onnxruntime resolves from the vendored
-          # third_party/ package (git-tracked), so ENABLE_ONNX stays ON. No
-          # guard-spm feature here, so SentencePiece is absent → ENABLE_GUARD_MODEL
-          # gracefully downgrades to OFF (verifies the graceful-fallback path).
+          # are default-ON, but onnxruntime is no longer git-tracked
+          # (third_party/onnxruntime-* is .gitignore'd; fetch via
+          # scripts/fetch-onnxruntime.sh or vcpkg `guard`). Without either,
+          # ENABLE_ONNX + ENABLE_GUARD_MODEL both gracefully downgrade to OFF.
+          # No guard-spm here → also verifies SentencePiece-absent fallback.
           - build_type: Release
             sanitizer: ""
             cmake_extra: ""
@@ -36,11 +37,12 @@ jobs:
             sanitizer: ""
             cmake_extra: "-DENABLE_COVERAGE=ON"
             label: coverage
-          # Full guard ON: install SentencePiece via guard-spm feature so
-          # ENABLE_GUARD_MODEL compiles the real ONNX guard path (not downgraded).
+          # Full guard ON: vcpkg `guard` (onnxruntime) + `guard-spm`
+          # (SentencePiece) so ENABLE_GUARD_MODEL stays ON after the
+          # third_party package left the published tree.
           - build_type: Release
             sanitizer: ""
-            cmake_extra: "-DENABLE_CURL=ON -DVCPKG_MANIFEST_FEATURES=guard-spm"
+            cmake_extra: "-DENABLE_CURL=ON -DVCPKG_MANIFEST_FEATURES=guard;guard-spm"
             label: release-all-features
           # Explicit OFF: verify the pass-through stub compile path still builds
           # when the user opts out of ONNX features entirely.

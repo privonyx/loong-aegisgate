@@ -78,7 +78,7 @@ docker build -t aegisgate:prod \
   --build-arg ENABLE_PG=ON \
   --build-arg ENABLE_OPENTELEMETRY=ON \
   --build-arg ENABLE_CONTROL_PLANE=ON \
-  --build-arg VCPKG_FEATURES="guard-spm;redis;pg;otel;control-plane" \
+  --build-arg VCPKG_FEATURES="guard;guard-spm;redis;pg;otel;control-plane" \
   .
 ```
 
@@ -89,7 +89,7 @@ ENABLE_REDIS=ON \
 ENABLE_PG=ON \
 ENABLE_OPENTELEMETRY=ON \
 ENABLE_CONTROL_PLANE=ON \
-VCPKG_FEATURES="guard-spm;redis;pg;otel;control-plane" \
+VCPKG_FEATURES="guard;guard-spm;redis;pg;otel;control-plane" \
   docker compose build
 ```
 

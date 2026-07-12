@@ -120,8 +120,11 @@ if [ "$PROFILE" = "prod" ]; then
   PROD_CMAKE_ARGS="-DENABLE_REDIS=ON -DENABLE_PG=ON -DENABLE_OPENTELEMETRY=ON -DENABLE_CONTROL_PLANE=ON"
   CMAKE_EXTRA_ARGS="${PROD_CMAKE_ARGS}${CMAKE_EXTRA_ARGS:+ ${CMAKE_EXTRA_ARGS}}"
   # 生产能力需要的 vcpkg manifest features 必须随之开启，否则 cmake 的 REQUIRED
-  # 查找（hiredis / libpq / grpc）会失败。调用者可用 AEGIS_VCPKG_FEATURES 覆盖。
-  AEGIS_VCPKG_FEATURES="${AEGIS_VCPKG_FEATURES:-guard-spm;redis;pg;otel;control-plane}"
+  # 查找（hiredis / libpq / grpc）会失败；ENABLE_GUARD_MODEL 另需 onnxruntime
+  # （`guard`）+ SentencePiece（`guard-spm`）——开源后 third_party/onnxruntime-*
+  # 不再入库，缺 `guard` 时 cmake 会把 ENABLE_GUARD_MODEL graceful 降为 OFF。
+  # 调用者可用 AEGIS_VCPKG_FEATURES 覆盖。
+  AEGIS_VCPKG_FEATURES="${AEGIS_VCPKG_FEATURES:-guard;guard-spm;redis;pg;otel;control-plane}"
 fi
 
 echo "========================================"
@@ -187,10 +190,11 @@ if [ "$BUILD_BACKEND" = true ]; then
   fi
 
   # ONNX 是基础能力（TASK-20260614-01：ENABLE_ONNX / ENABLE_GUARD_MODEL 默认 ON）。
-  # onnxruntime 由 cmake/Dependencies.cmake 从 third_party/ 解析，默认即编入神经
-  # embedding。guard 模型额外需要 SentencePiece —— 经 guard-spm vcpkg feature 提供，
-  # 否则会 graceful 降级。默认带 guard-spm 让 guard 真正编入；可用 AEGIS_VCPKG_FEATURES
-  # 覆盖（如设为空字符串以构建轻量、无 guard 的版本）。
+  # onnxruntime 可由 third_party/ 预编译包（scripts/fetch-onnxruntime.sh）或
+  # vcpkg `guard` feature 提供；SentencePiece 经 `guard-spm`。缺任一依赖时
+  # cmake 会 graceful 降级对应开关。非生产默认只带 guard-spm（假定本机已
+  # fetch ORT）；生产档位见上方 AEGIS_VCPKG_FEATURES 含 guard+guard-spm。
+  # 可用 AEGIS_VCPKG_FEATURES 覆盖（如设为空字符串以构建轻量、无 guard 的版本）。
   VCPKG_FEATURES="${AEGIS_VCPKG_FEATURES-guard-spm}"
   cmake -B build \
     -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" \
