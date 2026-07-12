@@ -65,3 +65,5 @@ add_test(NAME ConversationCacheEvictorTest COMMAND test_conversation_cache_evict
 add_executable(test_cache_migrator test_cache_migrator.cpp)
 target_link_libraries(test_cache_migrator PRIVATE aegisgate_core GTest::gtest_main)
 add_test(NAME CacheMigratorTest COMMAND test_cache_migrator)
+# LargeIndexDumps 在 CI 上常 20s+；给显式上限，避免无 TIMEOUT 时挂死拖垮整场。
+set_tests_properties(CacheMigratorTest PROPERTIES TIMEOUT 180)

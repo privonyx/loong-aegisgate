@@ -116,8 +116,11 @@ jobs:
           cd build && run-clang-tidy -p . ../src/ 2>&1 | head -100
 
       - name: Run tests
-        run: cd build && ctest --output-on-failure -j$(nproc)
-        timeout-minutes: 10
+        # release-all-features（ORT + Guard）下 GatewayRuntime 装配更重，且
+        # gateway_runtime RESOURCE_LOCK 会串行多条套件，GHA 上墙钟易超过 10m。
+        # --timeout 限制单测挂死，避免一只用例吃掉整步预算。
+        run: cd build && ctest --output-on-failure -j"$(nproc)" --timeout 180
+        timeout-minutes: 15
 
       - name: Coverage summary
         if: matrix.label == 'coverage'
@@ -205,5 +208,7 @@ jobs:
         run: cmake --build build -j$(nproc)
 
       - name: Run tests
-        run: cd build && ctest --output-on-failure -j$(nproc)
-        timeout-minutes: 10
+        # PG + control-plane 矩阵装配更重；与主矩阵一致给足墙钟，并用
+        # --timeout 限制单测挂死。
+        run: cd build && ctest --output-on-failure -j"$(nproc)" --timeout 180
+        timeout-minutes: 15
