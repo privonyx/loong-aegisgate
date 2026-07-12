@@ -67,13 +67,32 @@ declare -A SHA256_PINS=(
 )
 PIN_KEY="${ASSET_OS}-${ARCH}-${VERSION}"
 EXPECTED_SHA="${ONNXRUNTIME_SHA256:-${SHA256_PINS[$PIN_KEY]:-}}"
+# cmake Targets 引用 lib64/libonnxruntime.so.<ver>（官方包里 lib64 -> lib）。
+SO_NAME="libonnxruntime.so.${VERSION}"
+
+# 已解压目录是否可被 find_package(onnxruntime) 使用。
+ort_install_ready() {
+    local dest="$1"
+    [[ -f "$dest/lib/${SO_NAME}" ]] || return 1
+    [[ -f "$dest/lib/cmake/onnxruntime/onnxruntimeConfig.cmake" ]] || return 1
+    # Targets 校验路径是 lib64/...；缺 symlink 时补上（Actions cache 常丢 symlink）。
+    if [[ ! -e "$dest/lib64/${SO_NAME}" ]]; then
+        rm -rf "$dest/lib64"
+        ln -s lib "$dest/lib64" || return 1
+    fi
+    [[ -e "$dest/lib64/${SO_NAME}" ]]
+}
 
 echo "ONNX Runtime fetch: ${PKG_DIRNAME}"
 echo "  目标目录: ${DEST}"
 
 if [[ -d "$DEST" && "$FORCE" -ne 1 ]]; then
-    echo "  已存在（用 --force 重新下载），跳过。"
-    exit 0
+    if ort_install_ready "$DEST"; then
+        echo "  已存在且完整（用 --force 重新下载），跳过。"
+        exit 0
+    fi
+    echo "  已存在但不完整（缺 ${SO_NAME} 或 lib64 链接），重新拉取..."
+    rm -rf "$DEST"
 fi
 
 if [[ -z "$EXPECTED_SHA" && "$ALLOW_UNVERIFIED" -ne 1 ]]; then
@@ -116,7 +135,8 @@ fi
 # ---- 解包到 third_party -----------------------------------------------------
 mkdir -p "$ROOT_DIR/third_party"
 rm -rf "$DEST"
-tar -xzf "$TARBALL" -C "$TMP"
+# --no-same-owner：非 root / 容器里避免 uid 映射导致 tar 非零退出。
+tar --no-same-owner -xzf "$TARBALL" -C "$TMP"
 # 包内顶层目录即 ${PKG_DIRNAME}
 if [[ -d "$TMP/$PKG_DIRNAME" ]]; then
     mv "$TMP/$PKG_DIRNAME" "$DEST"
@@ -125,6 +145,11 @@ else
     extracted="$(find "$TMP" -maxdepth 2 -type d -name 'onnxruntime-*' | head -1)"
     [[ -n "$extracted" ]] || { echo "ERROR: 解包后未找到 onnxruntime 目录" >&2; exit 1; }
     mv "$extracted" "$DEST"
+fi
+
+if ! ort_install_ready "$DEST"; then
+    echo "ERROR: 解包后安装不完整（缺 lib/${SO_NAME} 或 lib64 链接）: $DEST" >&2
+    exit 1
 fi
 
 echo "  ✓ 已就绪: $DEST"

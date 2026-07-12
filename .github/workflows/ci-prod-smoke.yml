@@ -85,15 +85,9 @@ jobs:
           key: vcpkg-${{ runner.os }}-prod-smoke-${{ hashFiles('vcpkg.json') }}
           restore-keys: vcpkg-${{ runner.os }}-prod-smoke-
 
-      # 开源后 third_party/onnxruntime-* 不再入库；当前 vcpkg baseline 也没有
-      # onnxruntime port（`guard` feature 会报 baseline missing）。生产档位用
-      # 官方预编译包 + guard-spm（SentencePiece）保持 ENABLE_GUARD_MODEL=ON。
-      - name: Cache ONNX Runtime prebuilt
-        uses: actions/cache@v4
-        with:
-          path: third_party/onnxruntime-linux-x64-1.24.2
-          key: onnxruntime-linux-x64-1.24.2-43725474ba5663
-
+      # 不缓存解压目录：Actions cache 易弄丢 lib64→lib symlink，导致 cmake
+      # 找不到 lib64/libonnxruntime.so.*。8MB tgz 每次拉取可接受，且 fetch
+      # 脚本会校验完整性并在缺链接时自动修复。
       - name: Fetch ONNX Runtime
         run: bash scripts/fetch-onnxruntime.sh
 
